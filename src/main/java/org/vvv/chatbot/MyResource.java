@@ -1,4 +1,4 @@
-package org.vvv.chatbot-editor-service;
+package org.vvv.chatbot;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
