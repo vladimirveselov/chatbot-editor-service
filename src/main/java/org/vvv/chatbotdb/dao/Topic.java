@@ -1,0 +1,36 @@
+package org.vvv.chatbotdb.dao;
+
+
+public class Topic {
+
+    private Long id;
+
+    private String topicName;
+
+    private Long rank = 100L;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTopicName() {
+        return topicName;
+    }
+
+    public void setTopicName(String topicName) {
+        this.topicName = topicName;
+    }
+
+    public Long getRank() {
+        return rank;
+    }
+
+    public void setRank(Long rank) {
+        this.rank = rank;
+    }
+
+}
