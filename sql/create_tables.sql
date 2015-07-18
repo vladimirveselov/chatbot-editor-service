@@ -1,4 +1,4 @@
--- USE chatbot;
+USE chatbot;
 
 DROP TABLE IF EXISTS split_queries;
 DROP TABLE IF EXISTS queries;
