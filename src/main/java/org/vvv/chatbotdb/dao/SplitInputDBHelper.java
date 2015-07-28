@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Input;
+import org.vvv.chatbotdb.model.SplitInput;
 import org.vvv.chatbotdb.utils.StringUtils;
 
 public class SplitInputDBHelper extends DBObject {
@@ -19,7 +21,7 @@ public class SplitInputDBHelper extends DBObject {
     
     private StringUtils stringUtils = new StringUtils();
 
-    public void save(SplitInput splitInput) throws SQLException {
+    public void save(SplitInput splitInput) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "INSERT INTO split_inputs (input_id, prev_word, word, next_word) VALUES (?, ?, ?, ?)";
         PreparedStatement pstmt = null;
         ResultSet keys = null;
@@ -58,7 +60,7 @@ public class SplitInputDBHelper extends DBObject {
         }
     }
 
-    public void delete(SplitInput splitInput) throws SQLException {
+    public void delete(SplitInput splitInput) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM split_inputs WHERE id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -80,7 +82,7 @@ public class SplitInputDBHelper extends DBObject {
         }
     }
 
-    public void deleteByInputId(Long inputId) throws SQLException {
+    public void deleteByInputId(Long inputId) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM split_inputs WHERE input_id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -102,7 +104,7 @@ public class SplitInputDBHelper extends DBObject {
         }
     }
 
-    public void deleteByRuleId(Long ruleId) throws SQLException {
+    public void deleteByRuleId(Long ruleId) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM split_inputs WHERE input_id in (SELECT id FROM inputs WHERE rule_id = ?)";
         PreparedStatement pstmt = null;
         try {
@@ -123,7 +125,7 @@ public class SplitInputDBHelper extends DBObject {
             }
         }
     }
-    public SplitInput getById(Long id) throws SQLException {
+    public SplitInput getById(Long id) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, input_id, prev_word, word, next_word FROM split_inputs WHERE id = ?";
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -165,7 +167,7 @@ public class SplitInputDBHelper extends DBObject {
         return splitInput;
     }
     
-    public Set<SplitInput> getByInput(Input input) throws SQLException {
+    public Set<SplitInput> getByInput(Input input) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, prev_word, word, next_word FROM split_inputs WHERE input_id = ?";
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -206,7 +208,7 @@ public class SplitInputDBHelper extends DBObject {
         return set;
     }
     
-    public void saveInput(Input input) throws SQLException {
+    public void saveInput(Input input) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         List<String> words = this.stringUtils.split(input.getText());
         for (int i=0; i<words.size(); i++) {
             SplitInput splitInput = new SplitInput();

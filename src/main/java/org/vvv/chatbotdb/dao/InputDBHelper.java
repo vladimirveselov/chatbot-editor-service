@@ -10,13 +10,15 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Input;
+import org.vvv.chatbotdb.model.Rule;
 
 
 public class InputDBHelper extends DBObject {
 
     private static Log log = LogFactory.getLog(InputDBHelper.class);
     
-    public void save(Input input) throws SQLException {
+    public void save(Input input) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "INSERT INTO inputs (rule_id, input_text) VALUES (?, ?)";
         PreparedStatement pstmt = null;
         ResultSet keys = null;
@@ -54,7 +56,7 @@ public class InputDBHelper extends DBObject {
         }
     }
 
-    public void delete(Input input) throws SQLException {
+    public void delete(Input input) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM inputs WHERE id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -77,7 +79,7 @@ public class InputDBHelper extends DBObject {
         }
     }
 
-    public void deleteByRuleId(Long ruleId) throws SQLException {
+    public void deleteByRuleId(Long ruleId) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM inputs WHERE rule_id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -100,7 +102,7 @@ public class InputDBHelper extends DBObject {
         }
     }
 
-    public Input getById(Long id) throws SQLException {
+    public Input getById(Long id) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, input_text, rule_id FROM inputs WHERE id = ?";
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -140,7 +142,7 @@ public class InputDBHelper extends DBObject {
         return input;
     }
     
-    public Set<Input> getByRule(Rule rule) throws SQLException {
+    public Set<Input> getByRule(Rule rule) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, input_text, rule_id FROM inputs WHERE rule_id = ?";
         PreparedStatement pstmt = null;
         ResultSet rs = null;

@@ -1,4 +1,4 @@
-package org.vvv.chatbotdb.dao;
+package org.vvv.chatbotdb.model;
 
 import java.util.Set;
 

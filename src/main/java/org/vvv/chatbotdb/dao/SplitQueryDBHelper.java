@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Query;
+import org.vvv.chatbotdb.model.SplitQuery;
 import org.vvv.chatbotdb.utils.StringUtils;
 
 public class SplitQueryDBHelper extends DBObject {
@@ -19,7 +21,7 @@ public class SplitQueryDBHelper extends DBObject {
     
     private StringUtils stringUtils = new StringUtils();
 
-    public void save(SplitQuery splitQuery) throws SQLException {
+    public void save(SplitQuery splitQuery) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "INSERT INTO split_queries (query_id, prev_word, word, next_word) VALUES (?, ?, ?, ?)";
         PreparedStatement pstmt = null;
         ResultSet keys = null;
@@ -56,7 +58,7 @@ public class SplitQueryDBHelper extends DBObject {
         }
     }
 
-    public void delete(SplitQuery splitQuery) throws SQLException {
+    public void delete(SplitQuery splitQuery) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM split_queries WHERE id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -78,7 +80,7 @@ public class SplitQueryDBHelper extends DBObject {
         }
     }
 
-    public void deleteByQueryId(Long queryId) throws SQLException {
+    public void deleteByQueryId(Long queryId) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM split_queries WHERE query_id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -100,7 +102,7 @@ public class SplitQueryDBHelper extends DBObject {
         }
     }
 
-    public SplitQuery getById(Long id) throws SQLException {
+    public SplitQuery getById(Long id) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, query_id, prev_word, word, next_word FROM split_queries WHERE id = ?";
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -142,7 +144,7 @@ public class SplitQueryDBHelper extends DBObject {
         return splitQuery;
     }
     
-    public Set<SplitQuery> getByQuery(Query query) throws SQLException {
+    public Set<SplitQuery> getByQuery(Query query) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, prev_word, word, next_word FROM split_queries WHERE query_id = ?";
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -183,7 +185,7 @@ public class SplitQueryDBHelper extends DBObject {
         return set;
     }
     
-    public void saveQuery(Query query) throws SQLException {
+    public void saveQuery(Query query) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         List<String> words = this.stringUtils.split(query.getText().toLowerCase());
         for (int i=0; i<words.size(); i++) {
             SplitQuery splitQuery = new SplitQuery();

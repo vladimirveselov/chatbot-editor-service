@@ -8,7 +8,11 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.vvv.chatbotdb.model.Query;
+import org.vvv.chatbotdb.test.IntegrationTest;
 
+@Category(IntegrationTest.class)
 public class QueryDBHelperTest {
     
     private static Log log = LogFactory.getLog(QueryDBHelperTest.class);
@@ -28,7 +32,7 @@ public class QueryDBHelperTest {
     }
 
     @Test
-    public void testStart() throws SQLException {
+    public void testStart() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         Query query = new Query();
         query.setText("hi how are you?");
         query.setStartDate(new Date());
@@ -43,7 +47,7 @@ public class QueryDBHelperTest {
     }
     
     @Test
-    public void testStart2() throws SQLException {
+    public void testStart2() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         Query query = new Query();
         query.setText("что такое велосипед?");
         query.setStartDate(new Date());

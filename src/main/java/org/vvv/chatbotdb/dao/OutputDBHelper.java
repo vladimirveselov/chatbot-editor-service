@@ -10,12 +10,14 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Output;
+import org.vvv.chatbotdb.model.Rule;
 
 public class OutputDBHelper extends DBObject {
 
     private static Log log = LogFactory.getLog(OutputDBHelper.class);
     
-    public void save(Output output) throws SQLException {
+    public void save(Output output) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "INSERT INTO outputs (rule_id, output_text, request) VALUES (?, ?, ?)";
         PreparedStatement pstmt = null;
         ResultSet keys = null;
@@ -53,7 +55,7 @@ public class OutputDBHelper extends DBObject {
         }
     }
 
-    public void delete(Output output) throws SQLException {
+    public void delete(Output output) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM outputs WHERE id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -75,7 +77,7 @@ public class OutputDBHelper extends DBObject {
         }
     }
 
-    public void deleteByRuleId(Long ruleId) throws SQLException {
+    public void deleteByRuleId(Long ruleId) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM outputs WHERE rule_id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -97,7 +99,7 @@ public class OutputDBHelper extends DBObject {
         }
     }
 
-    public Output getById(Long id) throws SQLException {
+    public Output getById(Long id) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, output_text, request, rule_id FROM outputs WHERE id = ?";
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -138,7 +140,7 @@ public class OutputDBHelper extends DBObject {
         return output;
     }
     
-    public List<Output> findByRuleId(Long ruleId) throws SQLException {
+    public List<Output> findByRuleId(Long ruleId) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, output_text, request, rule_id FROM outputs WHERE rule_id = ?";
         PreparedStatement pstmt = null;
         ResultSet rs = null;

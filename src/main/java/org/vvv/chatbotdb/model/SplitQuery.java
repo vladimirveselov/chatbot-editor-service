@@ -1,16 +1,16 @@
-package org.vvv.chatbotdb.dao;
+package org.vvv.chatbotdb.model;
 
-public class SplitInput {
-    
+public class SplitQuery {
+
     private Long id;
-    
+
     private String word;
-    
+
     private String prevWord;
-    
+
     private String nextWord;
     
-    private Input input;
+    private Query query;
 
     public Long getId() {
         return id;
@@ -44,13 +44,12 @@ public class SplitInput {
         this.nextWord = nextWord;
     }
 
-    public Input getInput() {
-        return input;
+    public Query getQuery() {
+        return query;
     }
 
-    public void setInput(Input input) {
-        this.input = input;
+    public void setQuery(Query query) {
+        this.query = query;
     }
     
-
 }

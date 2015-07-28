@@ -65,7 +65,10 @@ public class DBHelper {
         this.connection.close();
     }
 
-    public Connection getConnection() {
+    public Connection getConnection() throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+    	if (this.connection == null || this.connection.isClosed()) {
+    		this.initConnection();
+    	}
         return this.connection;
     }
 

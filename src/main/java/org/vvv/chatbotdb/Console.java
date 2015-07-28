@@ -6,11 +6,11 @@ import java.util.Date;
 import java.util.List;
 
 import org.vvv.chatbotdb.dao.Holder;
-import org.vvv.chatbotdb.dao.Output;
-import org.vvv.chatbotdb.dao.Query;
-import org.vvv.chatbotdb.dao.Rule;
 import org.vvv.chatbotdb.dao.SearchAnswerResult;
-import org.vvv.chatbotdb.dao.Topic;
+import org.vvv.chatbotdb.model.Output;
+import org.vvv.chatbotdb.model.Query;
+import org.vvv.chatbotdb.model.Rule;
+import org.vvv.chatbotdb.model.Topic;
 
 public class Console {
     
@@ -58,7 +58,7 @@ public class Console {
         this.holder.getDbHelper().initConnection();
         Topic topic = new Topic();
         topic.setTopicName(topicName);
-        this.holder.getTopicDBHelper().delete(topic);
+        this.holder.getTopicDBHelper().delete(topicName);
         System.out.println("Topic " + topicName + " deleted");
         this.holder.getDbHelper().closeConnection();
     }

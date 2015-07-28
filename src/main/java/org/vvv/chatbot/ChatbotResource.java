@@ -13,9 +13,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.vvv.chatbotdb.dao.Chatbot;
 import org.vvv.chatbotdb.dao.ChatbotDBHelper;
 import org.vvv.chatbotdb.dao.Holder;
+import org.vvv.chatbotdb.model.Chatbot;
+
 
 /**
  * Root resource (exposed at "chatbot" path)
@@ -68,3 +69,4 @@ public class ChatbotResource {
 	}
 	
 }
+	

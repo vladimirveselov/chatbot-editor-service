@@ -9,13 +9,14 @@ import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Query;
 
 
 public class QueryDBHelper extends DBObject {
     
     private static Log log = LogFactory.getLog(QueryDBHelper.class);
     
-    public void start(Query query) throws SQLException {
+    public void start(Query query) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "INSERT INTO queries (query_text, session_id, chatbot_name, event_date) VALUES (?, ?, ?, ?)";
         PreparedStatement pstmt = null;
         ResultSet keys = null;
@@ -58,7 +59,7 @@ public class QueryDBHelper extends DBObject {
     }
 
     
-    public void update(Query query) throws SQLException {
+    public void update(Query query) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "UPDATE queries SET response = ? , actions = ?, rule_id = ?, request = ? WHERE id = ?";
         PreparedStatement pstmt = null;
         ResultSet keys = null;
@@ -100,7 +101,7 @@ public class QueryDBHelper extends DBObject {
         }
     }
 
-    public void delete(Query query) throws SQLException {
+    public void delete(Query query) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM queries WHERE id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -124,7 +125,7 @@ public class QueryDBHelper extends DBObject {
     }
 
     
-    public Query getById(Long id) throws SQLException {
+    public Query getById(Long id) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, query_text, session_id, "
                 + " chatbot_name, event_date, response, actions, rule_id, request FROM queries WHERE id = ?";
         PreparedStatement pstmt = null;

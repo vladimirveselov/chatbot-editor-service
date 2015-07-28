@@ -1,6 +1,8 @@
-package org.vvv.chatbotdb.dao;
+package org.vvv.chatbotdb.model;
 
+import javax.xml.bind.annotation.XmlRootElement;
 
+@XmlRootElement
 public class Topic {
 
     private Long id;

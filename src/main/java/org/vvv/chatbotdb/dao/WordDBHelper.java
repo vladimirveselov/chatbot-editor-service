@@ -8,12 +8,13 @@ import java.sql.Statement;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Word;
 
 public class WordDBHelper extends DBObject {
 
     private static Log log = LogFactory.getLog(WordDBHelper.class);
 
-    public void save(Word word) throws SQLException {
+    public void save(Word word) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "INSERT INTO words (word, syn_to_id) VALUES (?, ?)";
         PreparedStatement pstmt = null;
         try {
@@ -43,7 +44,7 @@ public class WordDBHelper extends DBObject {
         }
     }
 
-    public void update(Word word) throws SQLException {
+    public void update(Word word) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "UPDATE words SET syn_to_id = ? WHERE id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -71,7 +72,7 @@ public class WordDBHelper extends DBObject {
         }
     }
 
-    public void delete(Word word) throws SQLException {
+    public void delete(Word word) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM words WHERE id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -93,7 +94,7 @@ public class WordDBHelper extends DBObject {
         }
     }
 
-    public Word getById(Long id) throws SQLException {
+    public Word getById(Long id) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, word, syn_to_id FROM words WHERE id = ?";
         PreparedStatement pstmt = null;
         ResultSet rs = null;

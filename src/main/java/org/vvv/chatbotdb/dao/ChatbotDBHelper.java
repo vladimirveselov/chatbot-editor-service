@@ -10,13 +10,15 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Chatbot;
+import org.vvv.chatbotdb.model.Topic;
 
 
 public class ChatbotDBHelper extends DBObject {
 
     private static Log log = LogFactory.getLog(ChatbotDBHelper.class);
     
-    public Chatbot save(Chatbot chatbot) throws SQLException {
+    public Chatbot save(Chatbot chatbot) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "INSERT INTO chatbots(chatbot_name) VALUES (?)";
         PreparedStatement pstmt = null;
         ResultSet keys = null;
@@ -51,7 +53,7 @@ public class ChatbotDBHelper extends DBObject {
         return chatbot;
     }
 
-    public void delete(Chatbot chatbot) throws SQLException {
+    public void delete(Chatbot chatbot) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM chatbots WHERE id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -73,7 +75,7 @@ public class ChatbotDBHelper extends DBObject {
         }
     }
     
-    public void delete(String chatbotName) throws SQLException {
+    public void delete(String chatbotName) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
     	this.unlinkTopics(chatbotName);
         String sql = "DELETE FROM chatbots WHERE chatbot_name = ?";
         PreparedStatement pstmt = null;
@@ -96,7 +98,7 @@ public class ChatbotDBHelper extends DBObject {
         }
     }
 
-    public void unlinkTopics(String chatbotName) throws SQLException {
+    public void unlinkTopics(String chatbotName) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM topics_chatbots WHERE chatbot_id = (SELECT id FROM chatbots "
         		+ "WHERE chatbot_name = ?)";
         PreparedStatement pstmt = null;
@@ -119,7 +121,7 @@ public class ChatbotDBHelper extends DBObject {
         }
     }
     
-    public Chatbot getById(Long id) throws SQLException {
+    public Chatbot getById(Long id) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, chatbot_name FROM chatbots WHERE id = ?";
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -156,7 +158,7 @@ public class ChatbotDBHelper extends DBObject {
         return chatbot;
     }
     
-    public void link(Chatbot chatbot, Topic topic) throws SQLException {
+    public void link(Chatbot chatbot, Topic topic) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "INSERT INTO topics_chatbots(chatbot_id, topic_id) VALUES (?, ?)";
         PreparedStatement pstmt = null;
         try {
@@ -179,7 +181,7 @@ public class ChatbotDBHelper extends DBObject {
         }
     }
     
-    public void unlink(Chatbot chatbot, Topic topic) throws SQLException {
+    public void unlink(Chatbot chatbot, Topic topic) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM topics_chabots WHERE chatbot_id = ? and topic_id = ?";
         PreparedStatement pstmt = null;
         try {
@@ -202,7 +204,7 @@ public class ChatbotDBHelper extends DBObject {
         }
     }
     
-    public List<Chatbot> list() throws SQLException {
+    public List<Chatbot> list() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
     	List<Chatbot> chatbots = new ArrayList<Chatbot>();
     	String sql = "SELECT id, chatbot_name FROM chatbots";
         PreparedStatement pstmt = null;

@@ -5,19 +5,23 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Query;
 
+@XmlRootElement
 public class SearchAnswer extends DBObject {
     
     private static Log log = LogFactory.getLog(SearchAnswer.class);
     
-    public void process(Query query) throws SQLException {
+    public void process(Query query) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         super.getHolder().getQueryDBHelper().start(query);
         
     }
     
-    public SearchAnswerResult search(Long queryId) throws SQLException {
+    public SearchAnswerResult search(Long queryId) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT r.id rule_id, b.id input_id, "
                 + " sum(d.weight)*r.rank*t.rank score, c.query_id query_id FROM "
                 + " split_inputs a, "

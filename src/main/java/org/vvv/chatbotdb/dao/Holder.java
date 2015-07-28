@@ -1,5 +1,6 @@
 package org.vvv.chatbotdb.dao;
 
+
 public class Holder {
     
     private DBHelper dbHelper;

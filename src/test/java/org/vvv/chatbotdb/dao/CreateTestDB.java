@@ -4,7 +4,10 @@ import java.io.File;
 
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.SQLExec;
+import org.junit.experimental.categories.Category;
+import org.vvv.chatbotdb.test.IntegrationTest;
 
+@Category(IntegrationTest.class)
 public class CreateTestDB {
     
     public void initDB() {

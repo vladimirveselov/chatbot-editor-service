@@ -5,10 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 
-import org.vvv.chatbotdb.dao.Input;
-import org.vvv.chatbotdb.dao.Output;
-import org.vvv.chatbotdb.dao.Rule;
-import org.vvv.chatbotdb.dao.Topic;
+import org.vvv.chatbotdb.model.Input;
+import org.vvv.chatbotdb.model.Output;
+import org.vvv.chatbotdb.model.Rule;
+import org.vvv.chatbotdb.model.Topic;
 
 public class Reader {
 

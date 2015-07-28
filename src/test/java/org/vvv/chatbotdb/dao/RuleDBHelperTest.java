@@ -12,7 +12,14 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.vvv.chatbotdb.model.Input;
+import org.vvv.chatbotdb.model.Output;
+import org.vvv.chatbotdb.model.Rule;
+import org.vvv.chatbotdb.model.Topic;
+import org.vvv.chatbotdb.test.IntegrationTest;
 
+@Category(IntegrationTest.class)
 public class RuleDBHelperTest {
 
     private static Log log = LogFactory.getLog(RuleDBHelperTest.class);
@@ -38,7 +45,7 @@ public class RuleDBHelperTest {
     }
 
     @Test
-    public void testCRUD() throws SQLException {
+    public void testCRUD() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         RuleDBHelper helper = this.holder.getRuleDBHelper();
         Topic topic = new Topic();
         topic.setTopicName("testtopic2");
@@ -61,13 +68,13 @@ public class RuleDBHelperTest {
         Rule rule3 = helper.getById(rule.getId());
         assertTrue(rule3 == null);
 
-        this.holder.getTopicDBHelper().delete(topic);
+        this.holder.getTopicDBHelper().delete(topic.getTopicName());
         Topic top3 = this.holder.getTopicDBHelper().getById(topic.getId());
         assertTrue(top3 == null);
     }
 
     @Test
-    public void testFullRule() throws SQLException {
+    public void testFullRule() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         Topic topic = new Topic();
         topic.setTopicName("начало");
         this.holder.getTopicDBHelper().save(topic);
@@ -102,7 +109,7 @@ public class RuleDBHelperTest {
 
         this.holder.getRuleDBHelper().delete(rule);
 
-        this.holder.getTopicDBHelper().delete(topic);
+        this.holder.getTopicDBHelper().delete(topic.getTopicName());
     }
 
 }

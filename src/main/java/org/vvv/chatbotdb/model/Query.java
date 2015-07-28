@@ -1,7 +1,10 @@
-package org.vvv.chatbotdb.dao;
+package org.vvv.chatbotdb.model;
 
 import java.util.Date;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class Query {
     
     private Long id;

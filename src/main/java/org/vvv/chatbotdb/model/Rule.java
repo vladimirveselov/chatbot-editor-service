@@ -1,8 +1,11 @@
-package org.vvv.chatbotdb.dao;
+package org.vvv.chatbotdb.model;
 
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class Rule {
     
     private Long id;
