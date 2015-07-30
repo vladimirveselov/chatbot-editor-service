@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.vvv.chatbotdb.model.Chatbot;
+import org.vvv.chatbotdb.model.Input;
 import org.vvv.chatbotdb.model.Rule;
 import org.vvv.chatbotdb.model.Topic;
 
@@ -83,6 +84,15 @@ public class ChatbotClient {
 		return response;
 	}
 
+	public Rule getRule(String topicName, String ruleName) {
+		WebTarget target = client.target(this.endPoint);
+		Rule response = target.path("topics/" + topicName + "/" + ruleName)
+				.request(MediaType.APPLICATION_JSON)
+				.get(new GenericType<Rule>() {
+				});
+		return response;
+	}
+	
 	public Topic createTopic(Topic topic) {
 		WebTarget target = client.target(this.endPoint);
 		Response response = target.path("topics/topic")
@@ -171,5 +181,66 @@ public class ChatbotClient {
 		}
 
 		return response.readEntity(Topic.class);
+	}
+	
+	public List<Input> getInputs(String topicName, String ruleName) {
+		WebTarget target = client.target(this.endPoint);
+		List<Input> response = target.path("inputs/" + topicName + "/" + ruleName)
+				.request(MediaType.APPLICATION_JSON)
+				.get(new GenericType<List<Input>>() {
+				});
+		return response;
+	}
+
+	public void deleteInput(Long inputId) {
+		WebTarget target = client.target(this.endPoint);
+
+		Response response = target.path("inputs/" + inputId)
+				.request(MediaType.APPLICATION_JSON).delete();
+
+		if (response.getStatus() != 200) {
+			throw new RuntimeException(response.getStatus()
+					+ ": there was an error on the server.");
+		}
+	}
+	
+	public Input createInput(String topicName, String ruleName, Input input) {
+		WebTarget target = client.target(this.endPoint);
+		Response response = target.path("inputs/" + topicName + "/" + ruleName + "/input")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.entity(input, MediaType.APPLICATION_JSON));
+
+		if (response.getStatus() != 200) {
+			throw new RuntimeException(response.getStatus()
+					+ ": there was an error on the server.");
+		}
+
+		return response.readEntity(Input.class);
+	}
+	
+	public void updateInput(Input input) {
+		WebTarget target = client.target(this.endPoint);
+		Response response = target.path("inputs/input")
+				.request(MediaType.APPLICATION_JSON)
+				.put(Entity.entity(input, MediaType.APPLICATION_JSON));
+
+		if (response.getStatus() != 200) {
+			throw new RuntimeException(response.getStatus()
+					+ ": there was an error on the server.");
+		}
+	}
+	
+	public Input getInput(Long inputId) {
+		WebTarget target = client.target(this.endPoint);
+		Response response = target.path("inputs/" + inputId)
+				.request(MediaType.APPLICATION_JSON)
+				.get(Response.class);
+
+		if (response.getStatus() != 200) {
+			throw new RuntimeException(response.getStatus()
+					+ ": there was an error on the server.");
+		}
+
+		return response.readEntity(Input.class);
 	}
 }

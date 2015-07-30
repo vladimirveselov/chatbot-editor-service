@@ -13,6 +13,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.vvv.chatbotdb.model.Chatbot;
+import org.vvv.chatbotdb.model.Input;
 import org.vvv.chatbotdb.model.Rule;
 import org.vvv.chatbotdb.model.Topic;
 import org.vvv.chatbotdb.test.IntegrationTest;
@@ -133,6 +134,52 @@ public class ChatbotClientTest {
 			log.info("Name:" + r.getName());
 			log.info("rank:" + r.getRank());
 		}
+		
+		Rule rule2 = client.getRule(topic.getTopicName(), rule.getName());
+		log.info("Rule2:" + rule2.getId());
+		log.info("Name:" + rule2.getName());
+		log.info("rank:" + rule2.getRank());
+		assertTrue(777l == rule2.getRank());
+
+		Input input = new Input();
+		input.setRule(rule);
+		input.setText("Hahahaha");
+		input = client.createInput(topic.getTopicName(), rule.getName(), input);
+		log.info("Input created:" + input.getId());
+		log.info("Text:" + input.getText());
+
+		List<Input> inputs = client.getInputs(topic.getTopicName(), rule.getName());
+		exists = false;
+		for (Input in: inputs) {
+			log.info("id - " + in.getId());
+			log.info("name - " + in.getText());
+			if (input.getText().equals(in.getText())) {
+				exists = true;
+			}
+		}
+		assertTrue(exists);
+		
+		input.setText("Hehehe");
+		client.updateInput(input);
+		
+		Input input2 = client.getInput(input.getId());
+		log.info("Input updated:" + input2.getId());
+		log.info("Text:" + input2.getText());
+		
+		client.deleteInput(input2.getId());
+		log.info("Input deleted:" + input2.getId());
+		inputs = client.getInputs(topic.getTopicName(), rule.getName());
+		log.info("Inputs received:" + inputs.size());
+		exists = false;
+		for (Input in: inputs) {
+			log.info("id - " + in.getId());
+			log.info("name - " + in.getText());
+			if (input2.getText().equals(in.getText())) {
+				exists = true;
+			}
+		}
+		assertFalse(exists);
+		
 		
 		client.deleteRule(topic.getTopicName(), rule.getName());
 		log.info("deleted rule: " + rule.getId());

@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.vvv.chatbotdb.model.Query;
+import org.vvv.chatbotdb.model.SearchAnswerResult;
 
 @XmlRootElement
 public class SearchAnswer extends DBObject {

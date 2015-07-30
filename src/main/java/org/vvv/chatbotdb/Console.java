@@ -6,10 +6,10 @@ import java.util.Date;
 import java.util.List;
 
 import org.vvv.chatbotdb.dao.Holder;
-import org.vvv.chatbotdb.dao.SearchAnswerResult;
 import org.vvv.chatbotdb.model.Output;
 import org.vvv.chatbotdb.model.Query;
 import org.vvv.chatbotdb.model.Rule;
+import org.vvv.chatbotdb.model.SearchAnswerResult;
 import org.vvv.chatbotdb.model.Topic;
 
 public class Console {
