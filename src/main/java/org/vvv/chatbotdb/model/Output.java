@@ -45,5 +45,14 @@ public class Output {
         this.text = text;
     }
     
-    
+    public Output withText(String text) {
+    	this.setText(text);
+    	return this;
+    }
+
+    public Output withRequest(String request) {
+    	this.setRequest(request);
+    	return this;
+    }
+
 }

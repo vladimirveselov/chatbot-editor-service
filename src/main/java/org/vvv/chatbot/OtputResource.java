@@ -17,20 +17,20 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.vvv.chatbotdb.dao.Holder;
-import org.vvv.chatbotdb.model.Input;
+import org.vvv.chatbotdb.model.Output;
 import org.vvv.chatbotdb.model.Rule;
 
 /**
- * Root resource (exposed at "inputs" path)
+ * Root resource (exposed at "outputs" path)
  */
-@Path("inputs")
-public class InputsResource {
+@Path("outputs")
+public class OtputResource {
 
 	private Holder holder;
 
-	private static Log log = LogFactory.getLog(InputsResource.class);
+	private static Log log = LogFactory.getLog(OtputResource.class);
 
-	public InputsResource() {
+	public OtputResource() {
 		this.holder = new Holder();
 		this.holder.init();
 	}
@@ -38,20 +38,20 @@ public class InputsResource {
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path("{topicName}/{ruleName}")
-	public List<Input> getInputs(@PathParam("topicName") String topicName,
+	public List<Output> getOutputs(@PathParam("topicName") String topicName,
 			@PathParam("ruleName") String ruleName) throws SQLException,
 			InstantiationException, IllegalAccessException,
 			ClassNotFoundException {
-		return this.holder.getInputDBHelper().getByTopicNameAndRuleName(
+		return this.holder.getOutputDBHelper().getByTopicNameAndRuleName(
 				topicName, ruleName);
 	}
 
 	@POST
-	@Path("{topicName}/{ruleName}/input")
+	@Path("{topicName}/{ruleName}/output")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public Input createInput(@PathParam("topicName") String topicName,
-			@PathParam("ruleName") String ruleName, Input input)
+	public Output createOutput(@PathParam("topicName") String topicName,
+			@PathParam("ruleName") String ruleName, Output output)
 			throws InstantiationException, IllegalAccessException,
 			ClassNotFoundException, SQLException, RuleDoesntExistException {
 		Rule rule = this.holder.getRuleDBHelper().getByNameAndTopic(topicName,
@@ -59,46 +59,46 @@ public class InputsResource {
 		if (rule == null) {
 			throw new RuleDoesntExistException("Rule " + ruleName + " topic " + topicName + " doesnt exist");
 		}
-		input.setRule(rule);
-		return this.holder.getInputDBHelper().save(input);
+		output.setRule(rule);
+		return this.holder.getOutputDBHelper().save(output);
 	}
 
 	@DELETE
-	@Path("{inputId}")
+	@Path("{outputId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public Response deleteinput(@PathParam("inputId") Long inputId)
+	public Response deleteOutput(@PathParam("outputId") Long outputId)
 			throws InstantiationException, IllegalAccessException,
 			ClassNotFoundException, SQLException {
-		Input input = this.holder.getInputDBHelper().getById(inputId);
-		if (input != null) {
-			this.holder.getInputDBHelper().delete(input);
+		Output output= this.holder.getOutputDBHelper().getById(outputId);
+		if (output != null) {
+			this.holder.getOutputDBHelper().delete(output.getId());
 		}
 		return Response.ok().build();
 	}
 
 	@PUT
-	@Path("input")
+	@Path("output")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public Response update(Input input) throws InstantiationException,
+	public Response update(Output output) throws InstantiationException,
 			IllegalAccessException, ClassNotFoundException, SQLException {
-		log.info("Updating input:" + input.getId());
+		log.info("Updating output:" + output.getId());
 		try {
-			this.holder.getInputDBHelper().update(input);
+			this.holder.getOutputDBHelper().update(output);
 		} catch (Exception e) {
-			log.error("Cannot update topic: " + e, e);
+			log.error("Cannot update output: " + e, e);
 			throw e;
 		}
-		return Response.ok().entity(input).build();
+		return Response.ok().entity(output).build();
 	}
 	
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path("{inputId}")
-	public Input getInput(@PathParam("inputId") Long inputId) throws SQLException,
+	@Path("{outputId}")
+	public Output getOutput(@PathParam("outputId") Long outputId) throws SQLException,
 			InstantiationException, IllegalAccessException,
 			ClassNotFoundException {
-		return this.holder.getInputDBHelper().getById(inputId);
+		return this.holder.getOutputDBHelper().getById(outputId);
 	}
 }

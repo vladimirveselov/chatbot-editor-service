@@ -18,7 +18,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.vvv.chatbotdb.dao.Holder;
 import org.vvv.chatbotdb.dao.TopicDBHelper;
-import org.vvv.chatbotdb.model.Input;
 import org.vvv.chatbotdb.model.Rule;
 import org.vvv.chatbotdb.model.Topic;
 
@@ -41,10 +40,8 @@ public class TopicResource {
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public List<Topic> getAllTopics() throws InstantiationException,
 			IllegalAccessException, ClassNotFoundException, SQLException {
-		holder.getDbHelper().initConnection();
 		TopicDBHelper helper = holder.getTopicDBHelper();
 		List<Topic> response = helper.getAll();
-		holder.getDbHelper().closeConnection();
 		return response;
 	}
 
@@ -87,10 +84,8 @@ public class TopicResource {
 	public Response delete(@PathParam("topicName") String topicName)
 			throws InstantiationException, IllegalAccessException,
 			ClassNotFoundException, SQLException {
-		holder.getDbHelper().initConnection();
 		TopicDBHelper helper = holder.getTopicDBHelper();
 		helper.delete(topicName);
-		holder.getDbHelper().closeConnection();
 		return Response.ok().build();
 	}
 

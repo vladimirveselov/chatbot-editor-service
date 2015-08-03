@@ -35,10 +35,8 @@ public class ChatbotResource {
 	@GET
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public List<Chatbot> getAllChatbots() throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-        holder.getDbHelper().initConnection();
         ChatbotDBHelper helper = holder.getChatbotDBHelper();
         List<Chatbot> response = helper.list();
-        holder.getDbHelper().closeConnection();
         return response;
     }
 	
@@ -49,10 +47,8 @@ public class ChatbotResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Chatbot createActivityParams(Chatbot chatbot) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-        holder.getDbHelper().initConnection();
         ChatbotDBHelper helper = holder.getChatbotDBHelper();
         Chatbot response = helper.save(chatbot);
-        holder.getDbHelper().closeConnection();
         return response;
 	}
 	
@@ -61,10 +57,8 @@ public class ChatbotResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response delete (@PathParam ("chatbotName") String chatbotName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-        holder.getDbHelper().initConnection();
         ChatbotDBHelper helper = holder.getChatbotDBHelper();
         helper.delete(chatbotName);
-        holder.getDbHelper().closeConnection();
 		return Response.ok().build();
 	}
 	

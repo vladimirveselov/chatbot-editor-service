@@ -14,6 +14,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.vvv.chatbotdb.model.Chatbot;
 import org.vvv.chatbotdb.model.Input;
+import org.vvv.chatbotdb.model.Output;
+import org.vvv.chatbotdb.model.Query;
 import org.vvv.chatbotdb.model.Rule;
 import org.vvv.chatbotdb.model.Topic;
 import org.vvv.chatbotdb.test.IntegrationTest;
@@ -161,6 +163,57 @@ public class ChatbotClientTest {
 		
 		input.setText("Hehehe");
 		client.updateInput(input);
+		
+		Output output = new Output();
+		output.setText("What?");
+		output.setRequest("WHAT");
+		output.setRule(rule2);
+		output = client.createOutput(topic.getTopicName(), rule.getName(), output);
+		log.info("output created:" + output.getId());
+		
+		List<Output> outputs = client.getOutputs(topic.getTopicName(), rule.getName());
+		log.info("outputs received - " + outputs.size());
+		exists = false;
+		for (Output o: outputs) {
+			log.info("id - " + o.getId());
+			log.info("name - " + o.getText());
+			if (o.getText().equals(output.getText())) {
+				exists = true;
+			}
+		}
+		assertTrue(exists);
+		
+		output.setText("Why?");
+		output.setRequest("WHY");
+		client.updateOutput(output);
+		log.info("output updated:" + output.getText());
+		
+		Output output2 = client.getOutput(output.getId());
+		log.info("output updated:" + output2.getText());
+		
+		assertEquals(output.getText(), output2.getText());
+		assertEquals(output.getRequest(), output2.getRequest());
+		
+		Query query = new Query();
+		query.setText("Hehehe");
+		query = client.getAnswerGET(query);
+		log.info(query.getResponse());
+		log.info(query.getRule_id());
+		
+		client.deleteOutput(output.getId());
+		log.info("output deleted:" + output.getText());
+		
+		outputs = client.getOutputs(topic.getTopicName(), rule.getName());
+		log.info("outputs received - " + outputs.size());
+		exists = false;
+		for (Output o: outputs) {
+			log.info("id - " + o.getId());
+			log.info("name - " + o.getText());
+			if (o.getText().equals(output.getText())) {
+				exists = true;
+			}
+		}
+		assertFalse(exists);
 		
 		Input input2 = client.getInput(input.getId());
 		log.info("Input updated:" + input2.getId());

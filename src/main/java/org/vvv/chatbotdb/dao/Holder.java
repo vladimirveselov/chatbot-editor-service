@@ -19,7 +19,7 @@ public class Holder {
     
     private SplitQueryDBHelper splitQueryDBHelper;
     
-    private SearchAnswer searchAnswer;
+    private SearchAnswerDBHelper searchAnswer;
 
     private ChatbotDBHelper chatbotDBHelper;
     
@@ -31,11 +31,11 @@ public class Holder {
         this.chatbotDBHelper = chatbotDBHelper;
     }
 
-    public SearchAnswer getSearchAnswer() {
+    public SearchAnswerDBHelper getSearchAnswer() {
         return searchAnswer;
     }
 
-    public void setSearchAnswer(SearchAnswer searchAnswer) {
+    public void setSearchAnswer(SearchAnswerDBHelper searchAnswer) {
         this.searchAnswer = searchAnswer;
     }
 
@@ -134,7 +134,7 @@ public class Holder {
         this.splitQueryDBHelper.setDbHelper(this.dbHelper);        
         this.splitQueryDBHelper.setHolder(this);
         
-        this.searchAnswer = new SearchAnswer();
+        this.searchAnswer = new SearchAnswerDBHelper();
         this.searchAnswer.setDbHelper(dbHelper);
         this.searchAnswer.setHolder(this);
 

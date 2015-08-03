@@ -34,5 +34,16 @@ public class Topic {
     public void setRank(Long rank) {
         this.rank = rank;
     }
+    
+    public Topic withTopichName(String topicName) {
+    	this.setTopicName(topicName);
+    	return this;
+    }
 
+    public Topic withRank(Long rank) {
+    	this.setRank(rank);
+    	return this;
+    }
+
+    
 }

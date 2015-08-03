@@ -115,7 +115,7 @@ public class TopicDBHelper extends DBObject {
 	}
 
 	public Topic getByName(String name) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-		String sql = "SELECT id, topic_name, rank FROM TOPICS WHERE topic_name = ?";
+		String sql = "SELECT id, topic_name, rank FROM topics WHERE topic_name = ?";
 		Topic topic = null;
 		Connection conn = super.getDbHelper().getConnection();
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {

@@ -80,39 +80,36 @@ public class RuleDBHelper extends DBObject {
 
     
     public Rule getById(Long id) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-        String sql = "SELECT id, rule_name, rank FROM rules WHERE id = ?";
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
+        String sql = "SELECT "
+        		+ " r.id id, "
+        		+ " r.rule_name rule_name, "
+        		+ " r.rank rank,"
+        		+ " r.topic_id topic_id,"
+        		+ " t.topic_name topic_name,"
+        		+ " t.rank topic_rank "
+        		+ " FROM rules r, topics t"
+        		+ " WHERE r.topic_id = t.id"
+        		+ " AND r.id = ?";
         Rule rule = null;
-        try {
-            Connection conn = super.getDbHelper().getConnection();
-            pstmt = conn.prepareStatement(sql);
+        Connection conn = super.getDbHelper().getConnection();
+        try(PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, id);
-            rs = pstmt.executeQuery();
-            if (rs.next()) {
-                rule = new Rule();
-                rule.setId(rs.getLong("id"));
-                rule.setName(rs.getString("rule_name"));
-                rule.setRank(rs.getLong("rank"));
-            } 
+            try(ResultSet rs = pstmt.executeQuery()) {
+	            if (rs.next()) {
+	                rule = new Rule();
+	                rule.setId(rs.getLong("id"));
+	                rule.setName(rs.getString("rule_name"));
+	                rule.setRank(rs.getLong("rank"));
+	                Topic topic = new Topic();
+	                topic.setId(rs.getLong("topic_id"));
+	                topic.setTopicName(rs.getString("topic_name"));
+	                topic.setRank(rs.getLong("topic_rank"));
+	                rule.setTopic(topic);
+	            }
+            }
         } catch (SQLException e) {
             log.error("Error during selecting the rule: id " + id, e);
             throw e;
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (Exception ex) {
-                    
-                }
-            }
-            if (pstmt != null) {
-                try {
-                    pstmt.close();
-                } catch (SQLException ex) {
-                    // ignore
-                }
-            }
         }
         return rule;
     }    
