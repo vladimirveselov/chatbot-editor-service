@@ -1,6 +1,8 @@
 package org.vvv.chatbotdb.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class SMRule {
@@ -9,11 +11,13 @@ public class SMRule {
 	
 	private String name;
 	
-	private StateMachine stateMachine;
+	private String stateMachineName;
 	
 	private Set<SMCondition> conditions = new HashSet<SMCondition>();
 	
-	private Set<SMAction> actions = new HashSet<SMAction>();	
+	private List<String> actions = new ArrayList<String>();
+	
+	private List<String> actionNames = new ArrayList<String>();    
 
 	public Set<SMCondition> getConditions() {
 		return conditions;
@@ -23,11 +27,11 @@ public class SMRule {
 		this.conditions = conditions;
 	}
 
-	public Set<SMAction> getActions() {
+	public List<String> getActions() {
 		return actions;
 	}
 
-	public void setActions(Set<SMAction> actions) {
+	public void setActions(List<String> actions) {
 		this.actions = actions;
 	}
 
@@ -47,18 +51,21 @@ public class SMRule {
 		this.name = name;
 	}
 
-	public StateMachine getStateMachine() {
-		return stateMachine;
-	}
+    public List<String> getActionNames() {
+        return actionNames;
+    }
 
-	public void setStateMachine(StateMachine stateMachine) {
-		this.stateMachine = stateMachine;
-	}
+    public void setActionNames(List<String> actionNames) {
+        this.actionNames = actionNames;
+    }
 
-	@Override
-	public String toString() {
-		return "SMRule [name=" + name + ", conditions=" + conditions
-				+ ", actions=" + actions + "]";
-	}
+    public String getStateMachineName() {
+        return stateMachineName;
+    }
+
+    public void setStateMachineName(String stateMachineName) {
+        this.stateMachineName = stateMachineName;
+    }
+
 	
 }

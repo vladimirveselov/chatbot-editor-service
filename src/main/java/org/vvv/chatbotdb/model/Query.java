@@ -7,6 +7,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Query {
     
+    @Override
+    public String toString() {
+        return "Query [id=" + id + ", text=" + text + ", session_id="
+                + session_id + ", startDate=" + startDate + ", response="
+                + response + ", actions=" + actions + ", rule_id=" + rule_id
+                + ", request=" + request + ", chatbotName=" + chatbotName + "]";
+    }
+
     private Long id;
     
     private String text;

@@ -10,134 +10,125 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.vvv.chatbotdb.model.Input;
+import org.vvv.chatbotdb.model.Action;
 import org.vvv.chatbotdb.model.Rule;
 import org.vvv.chatbotdb.model.Topic;
 
-public class InputDBHelper extends DBObject {
+public class ActionDBHelper extends DBObject {
 
-	private static Log log = LogFactory.getLog(InputDBHelper.class);
+	private static Log log = LogFactory.getLog(ActionDBHelper.class);
 
-	public Input save(Input input, Rule rule) throws SQLException, InstantiationException,
+	public Action save(Action action) throws SQLException, InstantiationException,
 			IllegalAccessException, ClassNotFoundException {
-		String sql = "INSERT INTO inputs (rule_id, input_text) VALUES (?, ?)";
+		String sql = "INSERT INTO actions (rule_id, action_body, priority) VALUES (?, ?, ?)";
 		Connection conn = super.getDbHelper().getConnection();
 		try (PreparedStatement pstmt = conn.prepareStatement(sql,
 				Statement.RETURN_GENERATED_KEYS)) {
-			pstmt.setLong(1, rule.getId());
-			pstmt.setString(2, input.getText());
+			pstmt.setLong(1, action.getRule().getId());
+			pstmt.setString(2, action.getActionBody());
+			pstmt.setLong(3, action.getPriority());
 			pstmt.executeUpdate();
 			try (ResultSet keys = pstmt.getGeneratedKeys()) {
 				keys.next();
 				Long key = keys.getLong(1);
-				input.setId(key);
+				action.setId(key);
 			}
-			super.getHolder().getSplitInputDBHelper().saveInput(input);
 		} catch (SQLException e) {
-			log.error("Error during save input: " + input.getText()
-					+ ", rule: " + rule.getId() + "|"
-					+ rule.getName(), e);
+			log.error("Error during save action: " + action.getActionBody()
+					+ ", rule: " + action.getRule().getId() + "|"
+					+ action.getRule().getName(), e);
 			throw e;
 		}
-		return input;
+		return action;
 	}
 
-	public void delete(Input input) throws SQLException,
+	public void delete(Action action) throws SQLException,
 			InstantiationException, IllegalAccessException,
 			ClassNotFoundException {
-		String sql = "DELETE FROM inputs WHERE id = ?";
-		super.getHolder().getSplitInputDBHelper()
-				.deleteByInputId(input.getId());
+		String sql = "DELETE FROM actions WHERE id = ?";
 		Connection conn = super.getDbHelper().getConnection();
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setLong(1, input.getId());
+			pstmt.setLong(1, action.getId());
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
-			log.error("Error during deleting the input: " + input.getId(), e);
+			log.error("Error during deleting the action: " + action.getId(), e);
 			throw e;
 		}
 	}
 
-	public void update(Input input) throws SQLException,
+	public void update(Action action) throws SQLException,
 			InstantiationException, IllegalAccessException,
 			ClassNotFoundException {
-		String sql = "UPDATE inputs SET input_text = ? WHERE id = ?";
-		super.getHolder().getSplitInputDBHelper()
-				.deleteByInputId(input.getId());
+		String sql = "UPDATE actions SET "
+		        + " action_body = ?,"
+		        + " priority = ? "
+		        + " WHERE id = ?";
 		Connection conn = super.getDbHelper().getConnection();
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setString(1, input.getText());
-			pstmt.setLong(2, input.getId());
+			pstmt.setString(1, action.getActionBody());
+			pstmt.setLong(2, action.getPriority());
+			pstmt.setLong(3, action.getId());
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
-			log.error("Error during deleting the input: " + input.getId(), e);
+			log.error("Error during updating the action: " + action.getId(), e);
 			throw e;
 		}
-		super.getHolder().getSplitInputDBHelper().saveInput(input);
 	}
 
 	public void deleteByRuleId(Long ruleId) throws SQLException,
 			InstantiationException, IllegalAccessException,
 			ClassNotFoundException {
-		String sql = "DELETE FROM inputs WHERE rule_id = ?";
-        super.getHolder().getSplitInputDBHelper().deleteByRuleId(ruleId);
+		String sql = "DELETE FROM actions WHERE rule_id = ?";
         Connection conn = super.getDbHelper().getConnection();
-        try(PreparedStatement pstmt = conn.prepareStatement(sql)) {
+		try (PreparedStatement pstmt = conn.prepareStatement(sql)){
 			pstmt.setLong(1, ruleId);
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
-			log.error("Error during deleting the inputs by role id: " + ruleId,
-					e);
+			log.error("Error during deleting the actions by role id: " + ruleId,e);
 			throw e;
 		}
 	}
 
-	public Input getById(Long id) throws SQLException, InstantiationException,
+	public Action getById(Long id) throws SQLException, InstantiationException,
 			IllegalAccessException, ClassNotFoundException {
-		String sql = "SELECT "
-		        + "    i.id id, "
-		        + "    i.input_text input_text,"
-		        + "    r.rule_name rule_name"
-		        + "  FROM "
-		        + "    inputs i,"
-		        + "    rules r"
-		        + "  WHERE "
-		        + "    i.rule_id = r.id AND"
-		        + "    i.id = ?";
+		String sql = "SELECT id, rule_id, action_body, priority FROM actions WHERE id = ?";
 		Connection conn = super.getDbHelper().getConnection();
-		Input input = null;
+		Action action = null;
 		try(PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setLong(1, id);
 			try(ResultSet rs = pstmt.executeQuery()) {
 				if (rs.next()) {
-					input = new Input();
-					input.setId(rs.getLong("id"));
-					input.setText(rs.getString("input_text"));
-					input.setRuleName(rs.getString("rule_name"));
+					action = new Action();
+					action.setId(rs.getLong("id"));
+					action.setActionBody(rs.getString("action_body"));
+					action.setPriority(rs.getLong("priority"));
+					Rule rule = new Rule();
+					rule.setId(rs.getLong("rule_id"));
+					action.setRule(rule);
 				}
 			}
 		} catch (SQLException e) {
-			log.error("Error during selecting the input: id " + id, e);
+			log.error("Error during selecting the action: id " + id, e);
 			throw e;
 		} 
-		return input;
+		return action;
 	}
 
 	public void getByRule(Rule rule) throws SQLException,
 			InstantiationException, IllegalAccessException,
 			ClassNotFoundException {
-		String sql = "SELECT id, input_text, rule_id FROM inputs WHERE rule_id = ?";
+		String sql = "SELECT id, rule_id, action_body, priority FROM actions WHERE rule_id = ?";
 		Connection conn = super.getDbHelper().getConnection();
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setLong(1, rule.getId());
 			try (ResultSet rs = pstmt.executeQuery()) {
 				while (rs.next()) {
-					Input input = new Input();
-					input.setId(rs.getLong("id"));
-					input.setText(rs.getString("input_text"));
-					input.setRuleName(rule.getName());
-					input.setTopicName(rule.getTopicName());
-					rule.getInputs().add(input);
+					Action action = new Action();
+					action.setId(rs.getLong("id"));
+					action.setActionBody(rs.getString("action_body"));
+					action.setPriority(rs.getLong("priority"));
+					action.setRule(rule);
+					rule.getActions().add(action);
 				}
 			}
 		} catch (SQLException e) {
@@ -148,17 +139,27 @@ public class InputDBHelper extends DBObject {
 		}
 	}
 
-	public List<Input> getByTopicNameAndRuleName(String topicName,
+	public List<Action> getByTopicNameAndRuleName(String topicName,
 			String ruleName) throws SQLException, InstantiationException,
 			IllegalAccessException, ClassNotFoundException {
-		String sql = "SELECT " + " i.id id, " + " i.input_text input_text,"
-				+ " i.rule_id rule_id," + " r.rule_name rule_name,"
-				+ " r.topic_id topic_id," + " t.topic_name topic_name"
-				+ " FROM " + " inputs i," + " rules r," + " topics t"
-				+ " WHERE " + " i.rule_id = r.id AND "
-				+ " r.topic_id = t.id AND" + " r.rule_name = ? AND"
-				+ " t.topic_name = ?";
-		List<Input> inputs = new ArrayList<Input>();
+		String sql = "SELECT " 
+			+ " a.id id, " 
+		    + " a.action_body action_body,"
+		    + " a.priority priority,"
+			+ " a.rule_id rule_id," 
+		    + " r.rule_name rule_name,"
+			+ " r.topic_id topic_id," 
+			+ " t.topic_name topic_name"
+			+ " FROM " 
+			+ " actions a," 
+			+ " rules r," 
+			+ " topics t"
+			+ " WHERE " 
+			+ " a.rule_id = r.id AND "
+			+ " r.topic_id = t.id AND" 
+			+ " r.rule_name = ? AND"
+			+ " t.topic_name = ?";
+		List<Action> actions = new ArrayList<Action>();
 		Connection conn = super.getDbHelper().getConnection();
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, ruleName);
@@ -166,9 +167,10 @@ public class InputDBHelper extends DBObject {
 			Rule rule = null;
 			try (ResultSet rs = pstmt.executeQuery()) {
 				while (rs.next()) {
-					Input input = new Input();
-					input.setId(rs.getLong("id"));
-					input.setText(rs.getString("input_text"));
+					Action action = new Action();
+					action.setId(rs.getLong("id"));
+					action.setActionBody(rs.getString("action_body"));
+					action.setPriority(rs.getLong("priority"));
 					if (rule == null) {
 						rule = new Rule();
 						rule.setId(rs.getLong("rule_id"));
@@ -178,9 +180,8 @@ public class InputDBHelper extends DBObject {
 						topic.setTopicName(rs.getString("topic_name"));
 						rule.setTopicName(topic.getTopicName());
 					}
-					input.setRuleName(rule.getName());
-					input.setTopicName(rule.getTopicName());
-					inputs.add(input);
+					action.setRule(rule);
+					actions.add(action);
 				}
 			}
 		} catch (SQLException e) {
@@ -188,7 +189,7 @@ public class InputDBHelper extends DBObject {
 					+ ruleName + " topic name -" + topicName, e);
 			throw e;
 		}
-		return inputs;
+		return actions;
 	}
 
 }

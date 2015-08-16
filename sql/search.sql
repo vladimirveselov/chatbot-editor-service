@@ -29,7 +29,7 @@ where
     a.word = c.word
 )) AND
 b.rule_id = r.id AND
-r.topic_id = r.topic_id AND
+r.topic_id = t.id AND
 c.query_id = 8
 
 group by b.id

@@ -107,8 +107,8 @@ public class TopicResource {
 			throws InstantiationException, IllegalAccessException,
 			ClassNotFoundException, SQLException {
 		Topic topic = this.holder.getTopicDBHelper().getByName(topicName);
-		rule.setTopic(topic);
-		return this.holder.getRuleDBHelper().save(rule);
+		rule.setTopicName(topic.getTopicName());
+		return this.holder.getRuleDBHelper().save(rule, topic);
 	}
 
 	@DELETE
@@ -157,7 +157,7 @@ public class TopicResource {
 		log.info("Updating rule:" + rule.getName());
 		try {
 			Topic topic = this.holder.getTopicDBHelper().getByName(topicName);
-			rule.setTopic(topic);
+			rule.setTopicName(topic.getTopicName());
 			this.holder.getRuleDBHelper().update(rule);
 		} catch (Exception e) {
 			log.error("Cannot update topic: " + e, e);

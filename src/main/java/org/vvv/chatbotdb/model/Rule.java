@@ -10,7 +10,7 @@ public class Rule {
     
     private Long id;
     
-    private Topic topic;
+    private String topicName;
     
     private String name;
     
@@ -21,6 +21,8 @@ public class Rule {
     private Set<Input> inputs = new HashSet<Input>();
     
     private Set<Output> outputs = new HashSet<Output>();
+    
+    private Set<Action> actions = new HashSet<Action>();
 
     public Long getId() {
         return id;
@@ -30,13 +32,6 @@ public class Rule {
         this.id = id;
     }
 
-    public Topic getTopic() {
-        return topic;
-    }
-
-    public void setTopic(Topic topic) {
-        this.topic = topic;
-    }
 
     public String getName() {
         return name;
@@ -97,7 +92,8 @@ public class Rule {
     	for (String inputText : inputs) {
     		Input input = new Input();
     		input.setText(inputText);
-    		input.setRule(this);
+    		input.setRuleName(this.getName());
+    		input.setTopicName(this.getTopicName());
     		this.inputs.add(input);
     	}
     	return this;
@@ -122,16 +118,31 @@ public class Rule {
     	return this;
     }
     
-    public Rule withTopic(Topic topic) {
-    	this.setTopic(topic);
+    public Rule withTopicName(String topicName) {
+    	this.setTopicName(topicName);
     	return this;
     }
 
-	@Override
+    public Set<Action> getActions() {
+        return actions;
+    }
+
+    public void setActions(Set<Action> actions) {
+        this.actions = actions;
+    }
+
+    public String getTopicName() {
+        return topicName;
+    }
+
+    public void setTopicName(String topicName) {
+        this.topicName = topicName;
+    }
+
+    @Override
 	public String toString() {
-		return "Rule [id=" + id + ", topic=" + topic + ", name=" + name
+		return "Rule [id=" + id + ", topic=" + topicName + ", name=" + name
 				+ ", response=" + response + ", rank=" + rank + "]";
 	}
-
 
 }

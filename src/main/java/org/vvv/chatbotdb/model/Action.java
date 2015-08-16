@@ -7,7 +7,7 @@ public class Action {
     
     private Long id;
     
-    private Long priority;
+    private Long priority = 0l;
     
     public Long getPriority() {
         return priority;
@@ -44,5 +44,10 @@ public class Action {
     public void setActionBody(String actionBody) {
         this.actionBody = actionBody;
     }
-    
+
+    @Override
+    public String toString() {
+        return "Action [id=" + id + ", priority=" + priority + ", actionBody="
+                + actionBody + "]";
+    }
 }

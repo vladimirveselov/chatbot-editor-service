@@ -54,11 +54,11 @@ public class RuleDBHelperTest {
         log.info("Saved topic: " + topic.getId());
 
         Rule rule = new Rule();
-        rule.setTopic(topic);
+        rule.setTopicName(topic.getTopicName());
         rule.setName("testRuleName");
         rule.setRank(100L);
 
-        helper.save(rule);
+        helper.save(rule, topic);
         log.info("Saved rule: " + rule.getId());
 
         Rule rule2 = helper.getById(rule.getId());
@@ -80,12 +80,13 @@ public class RuleDBHelperTest {
         this.holder.getTopicDBHelper().save(topic);
 
         Rule rule = new Rule();
-        rule.setTopic(topic);
+        rule.setTopicName(topic.getTopicName());
 
         Set<Input> inputs = new HashSet<Input>();
         for (int i = 0; i < 5; i++) {
             Input input = new Input();
-            input.setRule(rule);
+            input.setRuleName(rule.getName());
+            input.setTopicName(topic.getTopicName());
             input.setText("a b c d e f g абырвалг " + i);
             inputs.add(input);
         }
@@ -103,7 +104,7 @@ public class RuleDBHelperTest {
 
         rule.setOutputs(outputs);
 
-        this.holder.getRuleDBHelper().save(rule);
+        this.holder.getRuleDBHelper().save(rule, topic);
 
         this.holder.getRuleDBHelper().getById(rule.getId());
 

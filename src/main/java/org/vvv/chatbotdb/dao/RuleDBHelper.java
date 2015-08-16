@@ -20,11 +20,11 @@ public class RuleDBHelper extends DBObject {
     
     private static Log log = LogFactory.getLog(RuleDBHelper.class);
     
-    public Rule save(Rule rule) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+    public Rule save(Rule rule, Topic topic) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "INSERT INTO rules (topic_id, rule_name, rank, response) VALUES (?, ?, ?, ?)";
         Connection conn = super.getDbHelper().getConnection();
         try(PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setLong(1, rule.getTopic().getId());
+            pstmt.setLong(1, topic.getId());
             pstmt.setString(2, rule.getName());
             pstmt.setLong(3, rule.getRank());
             pstmt.setString(4, rule.getResponse());
@@ -35,7 +35,7 @@ public class RuleDBHelper extends DBObject {
 	            rule.setId(key);
             }            
             for (Input input : rule.getInputs()) {
-                super.getHolder().getInputDBHelper().save(input);                
+                super.getHolder().getInputDBHelper().save(input, rule);                
             }
             for (Output output : rule.getOutputs()) {
                 super.getHolder().getOutputDBHelper().save(output);                
@@ -67,13 +67,14 @@ public class RuleDBHelper extends DBObject {
     public void delete(Rule rule) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         super.getHolder().getInputDBHelper().deleteByRuleId(rule.getId());
         super.getHolder().getOutputDBHelper().deleteByRuleId(rule.getId());
+        super.getHolder().getActionDBHelper().deleteByRuleId(rule.getId());
         String sql = "DELETE FROM rules WHERE id = ?";
         Connection conn = super.getDbHelper().getConnection();
         try(PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, rule.getId());
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            log.error("Error during deleting the rule: name: " + rule.getName() + ", topic: " + rule.getTopic().getTopicName(), e);
+            log.error("Error during deleting the rule: name: " + rule.getName() + ", topic: " + rule.getTopicName(), e);
             throw e;
         } 
     }
@@ -104,7 +105,7 @@ public class RuleDBHelper extends DBObject {
 	                topic.setId(rs.getLong("topic_id"));
 	                topic.setTopicName(rs.getString("topic_name"));
 	                topic.setRank(rs.getLong("topic_rank"));
-	                rule.setTopic(topic);
+	                rule.setTopicName(topic.getTopicName());
 	            }
             }
         } catch (SQLException e) {
@@ -155,7 +156,7 @@ public class RuleDBHelper extends DBObject {
                 rule.setId(rs.getLong("id"));
                 rule.setName(rs.getString("rule_name"));
                 rule.setRank(rs.getLong("rank"));
-                rule.setTopic(topic);
+                rule.setTopicName(topic.getTopicName());
                 rules.add(rule);
             } 
         } catch (SQLException e) {

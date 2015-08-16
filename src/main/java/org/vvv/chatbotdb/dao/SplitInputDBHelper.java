@@ -39,8 +39,7 @@ public class SplitInputDBHelper extends DBObject {
             splitInput.setId(key);
         } catch (SQLException e) {
             log.error("Error during save split_input: " + splitInput.getInput().getText()
-                    + ", rule: " + splitInput.getInput().getRule().getId() + "|"
-                    + splitInput.getInput().getRule().getName(), e);
+                    + ", rule: " + splitInput.getInput().getRuleName(), e);
             throw e;
         } finally {
             if (keys != null) {
@@ -62,24 +61,14 @@ public class SplitInputDBHelper extends DBObject {
 
     public void delete(SplitInput splitInput) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "DELETE FROM split_inputs WHERE id = ?";
-        PreparedStatement pstmt = null;
-        try {
-            Connection conn = super.getDbHelper().getConnection();
-            pstmt = conn.prepareStatement(sql);
+        Connection conn = super.getDbHelper().getConnection();
+        try(PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, splitInput.getId());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             log.error("Error during deleting the split input: " + splitInput.getId(), e);
             throw e;
-        } finally {
-            if (pstmt != null) {
-                try {
-                    pstmt.close();
-                } catch (SQLException ex) {
-                    // ignore
-                }
-            }
-        }
+        } 
     }
 
     public void deleteByInputId(Long inputId) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
@@ -169,41 +158,24 @@ public class SplitInputDBHelper extends DBObject {
     
     public Set<SplitInput> getByInput(Input input) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         String sql = "SELECT id, prev_word, word, next_word FROM split_inputs WHERE input_id = ?";
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
         Set<SplitInput> set = new HashSet<SplitInput>();
-        try {
-            Connection conn = super.getDbHelper().getConnection();
-            pstmt = conn.prepareStatement(sql);
+        Connection conn = super.getDbHelper().getConnection();
+        try(PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, input.getId());
-            rs = pstmt.executeQuery();
-            while (rs.next()) {
-                SplitInput splitInput = new SplitInput();
-                splitInput.setId(rs.getLong("id"));
-                splitInput.setPrevWord(rs.getString("prev_word"));
-                splitInput.setWord(rs.getString("word"));
-                splitInput.setNextWord(rs.getString("next_word"));
-                splitInput.setInput(input);
-                set.add(splitInput);
+            try(ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SplitInput splitInput = new SplitInput();
+                    splitInput.setId(rs.getLong("id"));
+                    splitInput.setPrevWord(rs.getString("prev_word"));
+                    splitInput.setWord(rs.getString("word"));
+                    splitInput.setNextWord(rs.getString("next_word"));
+                    splitInput.setInput(input);
+                    set.add(splitInput);
+                }
             }
         } catch (SQLException e) {
-            log.error("Error during selecting the split input: " + input.getText() + "| rule" + input.getRule().getName(), e);
+            log.error("Error during selecting the split input: " + input.getText() + "| rule" + input.getRuleName(), e);
             throw e;
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (Exception ex) {
-
-                }
-            }
-            if (pstmt != null) {
-                try {
-                    pstmt.close();
-                } catch (SQLException ex) {
-                    // ignore
-                }
-            }
         }
         return set;
     }

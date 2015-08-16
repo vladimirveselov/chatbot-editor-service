@@ -3,11 +3,19 @@ package org.vvv.chatbotdb.model;
 public class SMVariable {
 	
 	private Long id;
+
+	private String stateMachineName; 
 	
-	private StateMachine stateMachine;
-	
-	private String name;
-	
+    private String name;
+    
+	public String getStateMachineName() {
+        return stateMachineName;
+    }
+
+    public void setStateMachineName(String stateMachineName) {
+        this.stateMachineName = stateMachineName;
+    }
+
 	public Long getId() {
 		return id;
 	}
@@ -16,17 +24,9 @@ public class SMVariable {
 		this.id = id;
 	}
 
-	public StateMachine getStateMachine() {
-		return stateMachine;
-	}
-
 	@Override
 	public String toString() {
 		return "SMVariable [name=" + name + "]";
-	}
-
-	public void setStateMachine(StateMachine stateMachine) {
-		this.stateMachine = stateMachine;
 	}
 
 	public String getName() {
@@ -37,4 +37,5 @@ public class SMVariable {
 		this.name = name;
 	}
 
+	
 }

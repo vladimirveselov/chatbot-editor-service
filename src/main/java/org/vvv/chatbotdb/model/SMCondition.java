@@ -4,15 +4,17 @@ public class SMCondition {
 	
 	@Override
 	public String toString() {
-		return "SMCondition [smVariable=" + smVariable
+		return "SMCondition [smVariable=" + variableName
 				+ ", value=" + value + "]";
 	}
 
 	private Long id;
 	
-	private SMRule smRule;
+	private String stateMachineName;
 	
-	private SMVariable smVariable;
+	private String ruleName;
+	
+	private String variableName;
 	
 	private Boolean value;
 
@@ -24,22 +26,6 @@ public class SMCondition {
 		this.id = id;
 	}
 
-	public SMRule getSmRule() {
-		return smRule;
-	}
-
-	public void setSmRule(SMRule smRule) {
-		this.smRule = smRule;
-	}
-
-	public SMVariable getSmVariable() {
-		return smVariable;
-	}
-
-	public void setSmVariable(SMVariable smVariable) {
-		this.smVariable = smVariable;
-	}
-
 	public Boolean getValue() {
 		return value;
 	}
@@ -47,5 +33,29 @@ public class SMCondition {
 	public void setValue(Boolean value) {
 		this.value = value;
 	}
+
+    public String getStateMachineName() {
+        return stateMachineName;
+    }
+
+    public void setStateMachineName(String stateMachineName) {
+        this.stateMachineName = stateMachineName;
+    }
+
+    public String getRuleName() {
+        return ruleName;
+    }
+
+    public void setRuleName(String ruleName) {
+        this.ruleName = ruleName;
+    }
+
+    public String getVariableName() {
+        return variableName;
+    }
+
+    public void setVariableName(String variableName) {
+        this.variableName = variableName;
+    }
 
 }

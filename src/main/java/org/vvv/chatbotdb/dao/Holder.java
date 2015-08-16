@@ -23,7 +23,27 @@ public class Holder {
 
     private ChatbotDBHelper chatbotDBHelper;
     
-    public ChatbotDBHelper getChatbotDBHelper() {
+    private StateMachineDBHelper stateMachineDBHelper;
+    
+    private ActionDBHelper actionDBHelper;
+    
+    public ActionDBHelper getActionDBHelper() {
+        return actionDBHelper;
+    }
+
+    public void setActionDBHelper(ActionDBHelper actionDBHelper) {
+        this.actionDBHelper = actionDBHelper;
+    }
+
+    public StateMachineDBHelper getStateMachineDBHelper() {
+		return stateMachineDBHelper;
+	}
+
+	public void setStateMachineDBHelper(StateMachineDBHelper stateMachineDBHelper) {
+		this.stateMachineDBHelper = stateMachineDBHelper;
+	}
+
+	public ChatbotDBHelper getChatbotDBHelper() {
         return chatbotDBHelper;
     }
 
@@ -141,6 +161,14 @@ public class Holder {
         this.chatbotDBHelper = new ChatbotDBHelper();
         this.chatbotDBHelper.setDbHelper(dbHelper);
         this.chatbotDBHelper.setHolder(this);
+        
+        this.stateMachineDBHelper = new StateMachineDBHelper();
+        this.stateMachineDBHelper.setDbHelper(dbHelper);
+        this.stateMachineDBHelper.setHolder(this);
+
+        this.actionDBHelper = new ActionDBHelper();
+        this.actionDBHelper.setDbHelper(dbHelper);
+        this.actionDBHelper.setHolder(this);
 
     }
 

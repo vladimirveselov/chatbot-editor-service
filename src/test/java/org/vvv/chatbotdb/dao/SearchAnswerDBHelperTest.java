@@ -30,7 +30,7 @@ public class SearchAnswerDBHelperTest {
         topic1.setTopicName("topic1");
         holder.getTopicDBHelper().save(topic1);
         Rule rule1 = new Rule()
-        	.withTopic(topic1)
+        	.withTopicName(topic1.getTopicName())
         	.withName("rule1")
         	.withInputs(
         		"how are you",
@@ -42,12 +42,12 @@ public class SearchAnswerDBHelperTest {
         		"I am very good");
         Rule rule2 = new Rule()
         	.withName("default")
-        	.withTopic(topic1)
+        	.withTopicName(topic1.getTopicName())
         	.withOutputs("catch all");
         Rule rule3 = new Rule()
 	    	.withName("ruleRequest")
         	.withInputs("start request")
-	    	.withTopic(topic1)
+	    	.withTopicName(topic1.getTopicName())
 	    	.withOutputs(
 	    		new Output()
 	    		.withText("starting request")
@@ -56,19 +56,19 @@ public class SearchAnswerDBHelperTest {
 	    	.withName("ruleResponseYes")
         	.withInputs("yes", "sure")
         	.withResponse("requestId")
-	    	.withTopic(topic1)
+	    	.withTopicName(topic1.getTopicName())
 	    	.withOutputs("responded to requestId yes");
         Rule rule5 = new Rule()
 	    	.withName("ruleResponseNo")
         	.withInputs("not", "no", "never")
         	.withResponse("requestId")
-	    	.withTopic(topic1)
+	    	.withTopicName(topic1.getTopicName())
 	    	.withOutputs("responded to requestId no");
-        holder.getRuleDBHelper().save(rule1);
-        holder.getRuleDBHelper().save(rule2);
-        holder.getRuleDBHelper().save(rule3);
-        holder.getRuleDBHelper().save(rule4);
-        holder.getRuleDBHelper().save(rule5);
+        holder.getRuleDBHelper().save(rule1, topic1);
+        holder.getRuleDBHelper().save(rule2, topic1);
+        holder.getRuleDBHelper().save(rule3, topic1);
+        holder.getRuleDBHelper().save(rule4, topic1);
+        holder.getRuleDBHelper().save(rule5, topic1);
     }
 
 	@After
@@ -101,7 +101,7 @@ public class SearchAnswerDBHelperTest {
 			Rule rule = holder.getRuleDBHelper().getById(q.getRule_id());
 			log.info(q.getText() + " === " + q.getResponse() 
 					+ " rule = " + rule.getName() 
-					+ " topic = " + rule.getTopic().getTopicName());
+					+ " topic = " + rule.getTopicName());
 			assertEquals(t.getExpectedRuleName(), rule.getName());
 		}
 	}

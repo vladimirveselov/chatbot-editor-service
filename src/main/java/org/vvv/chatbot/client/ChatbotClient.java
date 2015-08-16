@@ -11,11 +11,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.vvv.chatbot.security.LoginFilter;
+import org.vvv.chatbotdb.model.Action;
 import org.vvv.chatbotdb.model.Chatbot;
 import org.vvv.chatbotdb.model.Input;
 import org.vvv.chatbotdb.model.Output;
 import org.vvv.chatbotdb.model.Query;
 import org.vvv.chatbotdb.model.Rule;
+import org.vvv.chatbotdb.model.StateMachine;
 import org.vvv.chatbotdb.model.Topic;
 
 public class ChatbotClient {
@@ -367,4 +369,131 @@ public class ChatbotClient {
 
 		return response.readEntity(Query.class);
 	}
+
+    public List<Action> getActions(String topicName, String ruleName) {
+        WebTarget target = client.target(this.endPoint);
+        List<Action> response = target
+                .path("actions/" + topicName + "/" + ruleName)
+                .request(MediaType.APPLICATION_JSON)
+                .header(LoginFilter.HEADER_KEY, LoginFilter.SECRET)
+                .get(new GenericType<List<Action>>() {
+                });
+        return response;
+    }
+
+    public void deleteAction(Long actionId) {
+        WebTarget target = client.target(this.endPoint);
+
+        Response response = target.path("actions/" + actionId)
+                .request(MediaType.APPLICATION_JSON)
+                .header(LoginFilter.HEADER_KEY, LoginFilter.SECRET)
+                .delete();
+
+        if (response.getStatus() != 200) {
+            throw new RuntimeException(response.getStatus()
+                    + ": there was an error on the server.");
+        }
+    }
+
+    public Action createAction(String topicName, String ruleName, Action action) {
+        WebTarget target = client.target(this.endPoint);
+        Response response = target
+                .path("actions/" + topicName + "/" + ruleName + "/action")
+                .request(MediaType.APPLICATION_JSON)
+                .header(LoginFilter.HEADER_KEY, LoginFilter.SECRET)
+                .post(Entity.entity(action, MediaType.APPLICATION_JSON));
+
+        if (response.getStatus() != 200) {
+            throw new RuntimeException(response.getStatus()
+                    + ": there was an error on the server.");
+        }
+
+        return response.readEntity(Action.class);
+    }
+
+    public void updateAction(Action action) {
+        WebTarget target = client.target(this.endPoint);
+        Response response = target.path("actions/action")
+                .request(MediaType.APPLICATION_JSON)
+                .header(LoginFilter.HEADER_KEY, LoginFilter.SECRET)
+                .put(Entity.entity(action, MediaType.APPLICATION_JSON));
+
+        if (response.getStatus() != 200) {
+            throw new RuntimeException(response.getStatus()
+                    + ": there was an error on the server.");
+        }
+    }
+
+    public Action getAction(Long actionId) {
+        WebTarget target = client.target(this.endPoint);
+        Response response = target.path("actions/" + actionId)
+                .request(MediaType.APPLICATION_JSON)
+                .header(LoginFilter.HEADER_KEY, LoginFilter.SECRET)
+                .get(Response.class);
+
+        if (response.getStatus() != 200) {
+            throw new RuntimeException(response.getStatus()
+                    + ": there was an error on the server.");
+        }
+
+        return response.readEntity(Action.class);
+    }
+
+
+    public List<StateMachine> getStateMachines() {
+        WebTarget target = client.target(this.endPoint);
+        List<StateMachine> response = target
+                .path("statemachines")
+                .request(MediaType.APPLICATION_JSON)
+                .header(LoginFilter.HEADER_KEY, LoginFilter.SECRET)
+                .get(new GenericType<List<StateMachine>>() {
+                });
+        return response;
+    }
+
+    public void deleteStateMachine(String stateMachineName) {
+        WebTarget target = client.target(this.endPoint);
+
+        Response response = target.path("statemachines/" + stateMachineName)
+                .request(MediaType.APPLICATION_JSON)
+                .header(LoginFilter.HEADER_KEY, LoginFilter.SECRET)
+                .delete();
+
+        if (response.getStatus() != 200) {
+            throw new RuntimeException(response.getStatus()
+                    + ": there was an error on the server.");
+        }
+    }
+
+    public StateMachine createStateMachine(StateMachine stateMachine) {
+        WebTarget target = client.target(this.endPoint);
+        Response response = target
+                .path("statemachines/statemachine")
+                .request(MediaType.APPLICATION_JSON)
+                .header(LoginFilter.HEADER_KEY, LoginFilter.SECRET)
+                .post(Entity.entity(stateMachine, MediaType.APPLICATION_JSON));
+
+        if (response.getStatus() != 200) {
+            throw new RuntimeException(response.getStatus()
+                    + ": there was an error on the server.");
+        }
+
+        return response.readEntity(StateMachine.class);
+    }
+
+    public StateMachine getStateMachine(String name) {
+        WebTarget target = client.target(this.endPoint);
+        Response response = target.path("statemachines/" + name)
+                .request(MediaType.APPLICATION_JSON)
+                .header(LoginFilter.HEADER_KEY, LoginFilter.SECRET)
+                .get(Response.class);
+
+        if (response.getStatus() != 200) {
+            throw new RuntimeException(response.getStatus()
+                    + ": there was an error on the server.");
+        }
+
+        return response.readEntity(StateMachine.class);
+    }
+
 }

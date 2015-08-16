@@ -4,7 +4,12 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class DBHelper {
+    
+    private static Log log = LogFactory.getLog(DBHelper.class);
 
 	private Connection connection;
 
@@ -52,6 +57,8 @@ public class DBHelper {
 
 	public void initConnection() throws SQLException, InstantiationException,
 			IllegalAccessException, ClassNotFoundException {
+	    log.info("driver:" + this.driverClass);
+	    log.info("connection string:" + this.connectionString.substring(0, 20));
 		Class.forName(this.driverClass).newInstance();
 		if (user == null) {
 			this.connection = DriverManager
@@ -92,6 +99,7 @@ public class DBHelper {
 		if (this.connection == null || this.connection.isClosed()) {
 			try {
 				this.initConnection();
+				log.info("open local connection");
 			} catch (Exception e) {
 				this.initRDSConnection();
 			}

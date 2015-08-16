@@ -54,4 +54,10 @@ public class StateMachine {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+    @Override
+    public String toString() {
+        return "StateMachine [id=" + id + ", name=" + name + ", variables="
+                + variables + ", actions=" + actions + ", rules=" + rules + "]";
+    }
 }

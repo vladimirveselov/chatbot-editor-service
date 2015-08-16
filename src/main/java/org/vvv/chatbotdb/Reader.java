@@ -48,7 +48,8 @@ public class Reader {
                             return;
                         }
                         Input input = new Input();
-                        input.setRule(currentRule);
+                        input.setRuleName(currentRule.getName());
+                        input.setTopicName(currentRule.getTopicName());
                         input.setText(line);
                         currentRule.getInputs().add(input);
                     }
@@ -92,10 +93,10 @@ public class Reader {
                 }
                 if (line.startsWith("Rule:")) {
                     if (currentRule != null) {
-                        console.createRule(currentRule);
+                        console.createRule(currentRule, currentTopic);
                     }
                     currentRule = new Rule();
-                    currentRule.setTopic(currentTopic);
+                    currentRule.setTopicName(currentTopic.getTopicName());
                     String ruleName = line.substring(5).trim();
                     currentRule.setName(ruleName);
                     System.out.println("Rule: " + currentRule.getName());
@@ -107,7 +108,7 @@ public class Reader {
                 output.setRule(currentRule);
                 output.setText(sb.toString());
                 currentRule.getOutputs().add(output);
-                console.createRule(currentRule);
+                console.createRule(currentRule, currentTopic);
             }
         } catch (Exception e) {
             e.printStackTrace();

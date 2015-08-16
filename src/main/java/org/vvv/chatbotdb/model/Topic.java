@@ -1,5 +1,8 @@
 package org.vvv.chatbotdb.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -10,6 +13,16 @@ public class Topic {
     private String topicName;
 
     private Long rank = 100L;
+    
+    private Set<Rule> rules = new HashSet<Rule>();
+
+    public Set<Rule> getRules() {
+        return rules;
+    }
+
+    public void setRules(Set<Rule> rules) {
+        this.rules = rules;
+    }
 
     public Long getId() {
         return id;
@@ -43,6 +56,12 @@ public class Topic {
     public Topic withRank(Long rank) {
     	this.setRank(rank);
     	return this;
+    }
+
+    @Override
+    public String toString() {
+        return "Topic [id=" + id + ", topicName=" + topicName + ", rank="
+                + rank + ", rules=" + rules + "]";
     }
 
     

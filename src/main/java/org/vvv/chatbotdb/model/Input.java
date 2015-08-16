@@ -9,8 +9,10 @@ public class Input {
     
     private String text;
     
-    private Rule rule;
-
+    private String topicName;
+    
+    private String ruleName;
+    
     public Long getId() {
         return id;
     }
@@ -27,13 +29,21 @@ public class Input {
         this.text = text;
     }
 
-    public Rule getRule() {
-        return rule;
+    public String getRuleName() {
+        return ruleName;
     }
 
-    public void setRule(Rule rule) {
-        this.rule = rule;
+    public void setRuleName(String ruleName) {
+        this.ruleName = ruleName;
     }
+
+    public String getTopicName() {
+        return topicName;
+    }
+
+    public void setTopicName(String topicName) {
+        this.topicName = topicName;
+    }
+
     
-
 }

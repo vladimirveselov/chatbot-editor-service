@@ -1,4 +1,4 @@
-package org.vvv.chatbotdb.utils;
+package org.vvv.chatbot.client.excel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,23 +13,32 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ExcelUtils {
 
-	public List<List<List<String>>> readFromExcel(InputStream is)
+	public List<ExcelSheet> readFromExcel(InputStream is)
 			throws IOException {
-		List<List<List<String>>> data = new ArrayList<List<List<String>>>();
+		List<ExcelSheet> data = new ArrayList<ExcelSheet>();
 		try (XSSFWorkbook wb = new XSSFWorkbook(is)) {
 			Iterator<XSSFSheet> sheets = wb.iterator();
 			while (sheets.hasNext()) {
 				XSSFSheet sheet = sheets.next();
+				ExcelSheet esh = new ExcelSheet();
+				esh.setName(sheet.getSheetName());
 				List<List<String>> sheetObj = new ArrayList<List<String>>();
-				data.add(sheetObj);
 				for (Row row : sheet) {
 					List<String> rowObj = new ArrayList<String>();
 					sheetObj.add(rowObj);
 					for (int i = 0; i < row.getLastCellNum(); i++) {
 						Cell cell = row.getCell(i, Row.CREATE_NULL_AS_BLANK);
-						rowObj.add(cell.getStringCellValue());
+						String rsdata = "";
+						try {
+						    rsdata = cell.getStringCellValue();
+						} catch (IllegalStateException ex) {
+						    rsdata = cell.getNumericCellValue() + "";
+						}
+						rowObj.add(rsdata);
 					}
 				}
+				esh.setData(sheetObj);
+				data.add(esh);
 			}
 		}
 		return data;

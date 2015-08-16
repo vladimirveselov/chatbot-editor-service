@@ -115,10 +115,10 @@ public class Console {
 		this.holder.getDbHelper().closeConnection();
 	}
 
-	public void createRule(Rule rule) throws InstantiationException,
+	public void createRule(Rule rule, Topic topic) throws InstantiationException,
 			IllegalAccessException, ClassNotFoundException, SQLException {
 		this.holder.getDbHelper().initConnection();
-		this.holder.getRuleDBHelper().save(rule);
+		this.holder.getRuleDBHelper().save(rule, topic);
 		System.out.println("Rule created:" + rule.getName() + " id="
 				+ rule.getId());
 		this.holder.getDbHelper().closeConnection();

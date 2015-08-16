@@ -10,8 +10,10 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.vvv.chatbotdb.model.Action;
 import org.vvv.chatbotdb.model.Chatbot;
 import org.vvv.chatbotdb.model.Input;
 import org.vvv.chatbotdb.model.Output;
@@ -25,6 +27,12 @@ public class ChatbotClientTest {
 	
 	private static Log log = LogFactory.getLog(ChatbotClientTest.class);
 
+	@Before
+    public void tearUp() {
+        ChatbotClient client = new ChatbotClient();
+        client.deleteTopic("Hello");
+    }
+	
 	@Test
 	public void testGetAllChatbots() {
 		ChatbotClient client = new ChatbotClient();
@@ -144,7 +152,8 @@ public class ChatbotClientTest {
 		assertTrue(777l == rule2.getRank());
 
 		Input input = new Input();
-		input.setRule(rule);
+		input.setRuleName(rule.getName());
+		input.setTopicName(topic.getTopicName());
 		input.setText("Hahahaha");
 		input = client.createInput(topic.getTopicName(), rule.getName(), input);
 		log.info("Input created:" + input.getId());
@@ -182,6 +191,46 @@ public class ChatbotClientTest {
 			}
 		}
 		assertTrue(exists);
+		
+		Action action = new Action();
+		action.setRule(rule2);
+		action.setPriority(10l);
+		action.setActionBody("test");
+		
+		action = client.createAction(topic.getTopicName(), rule2.getName(), action);
+		List<Action> actions = client.getActions(topic.getTopicName(), rule.getName());
+		log.info(" list actions: " + actions.size());
+		exists = false;
+		for (Action a : actions) {
+		    log.info(" action: " + a.toString());
+		    if (a.getActionBody().equals(action.getActionBody())) {
+		        exists = true;
+		    }
+		}
+		assertTrue(exists);
+		
+		action.setActionBody("modified body");
+		action.setPriority(100l);
+		client.updateAction(action);
+		log.info("action updated - " + action.toString());
+		Action action2 = client.getAction(action.getId());
+		log.info("action read - " + action2.toString());
+		assertEquals("modified body", action2.getActionBody());
+		assertEquals(new Long(100l), action2.getPriority());
+		
+		
+		client.deleteAction(action.getId());
+		log.info(" action deleted ");
+		actions = client.getActions(topic.getTopicName(), rule.getName());
+        exists = false;
+        log.info(" list actions: " + actions.size());
+        for (Action a : actions) {
+            log.info(" action: " + a.toString());
+            if (a.getActionBody().equals(action.getActionBody())) {
+                exists = true;
+            }
+        }
+        assertFalse(exists);		
 		
 		output.setText("Why?");
 		output.setRequest("WHY");

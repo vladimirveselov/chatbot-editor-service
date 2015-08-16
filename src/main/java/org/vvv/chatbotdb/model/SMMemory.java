@@ -8,15 +8,35 @@ public class SMMemory {
 	
 	private String sessionId;
 	
-	private StateMachine stateMachine;
+	private String stateMachineName;
 	
-	private SMVariable smVariable;
+	private String smVariableName;
 	
 	private Boolean value;
 	
 	private Date lastModified;
+	
+	private String shortStringValue;
+	
+	private String longStringValue;
 
-	public Long getId() {
+	public String getShortStringValue() {
+        return shortStringValue;
+    }
+
+    public void setShortStringValue(String shortStringValue) {
+        this.shortStringValue = shortStringValue;
+    }
+
+    public String getLongStringValue() {
+        return longStringValue;
+    }
+
+    public void setLongStringValue(String longStringValue) {
+        this.longStringValue = longStringValue;
+    }
+
+    public Long getId() {
 		return id;
 	}
 
@@ -30,22 +50,6 @@ public class SMMemory {
 
 	public void setSessionId(String sessionId) {
 		this.sessionId = sessionId;
-	}
-
-	public StateMachine getStateMachine() {
-		return stateMachine;
-	}
-
-	public void setStateMachine(StateMachine stateMachine) {
-		this.stateMachine = stateMachine;
-	}
-
-	public SMVariable getSmVariable() {
-		return smVariable;
-	}
-
-	public void setSmVariable(SMVariable smVariable) {
-		this.smVariable = smVariable;
 	}
 
 	public Boolean getValue() {
@@ -63,5 +67,31 @@ public class SMMemory {
 	public void setLastModified(Date lastModified) {
 		this.lastModified = lastModified;
 	}
+
+    @Override
+    public String toString() {
+        return "SMMemory [id=" + id + ", sessionId=" + sessionId + ", value="
+                + value + ", lastModified=" + lastModified
+                + ", shortStringValue=" + shortStringValue
+                + ", longStringValue=" + longStringValue + "]";
+    }
+
+    public String getStateMachineName() {
+        return stateMachineName;
+    }
+
+    public void setStateMachineName(String stateMachineName) {
+        this.stateMachineName = stateMachineName;
+    }
+
+    public String getSmVariableName() {
+        return smVariableName;
+    }
+
+    public void setSmVariableName(String smVariableName) {
+        this.smVariableName = smVariableName;
+    }
+    
+    
 
 }

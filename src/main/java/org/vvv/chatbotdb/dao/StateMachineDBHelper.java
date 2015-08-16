@@ -1,141 +1,1015 @@
 package org.vvv.chatbotdb.dao;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Action;
+import org.vvv.chatbotdb.model.ActionResult;
 import org.vvv.chatbotdb.model.SMAction;
 import org.vvv.chatbotdb.model.SMCondition;
+import org.vvv.chatbotdb.model.SMMemory;
 import org.vvv.chatbotdb.model.SMRule;
 import org.vvv.chatbotdb.model.SMVariable;
 import org.vvv.chatbotdb.model.StateMachine;
-import org.vvv.chatbotdb.utils.ExcelUtils;
-
 
 public class StateMachineDBHelper extends DBObject {
-    
+
     private static Log log = LogFactory.getLog(StateMachineDBHelper.class);
 
-    public List<StateMachine> readFromExcel(String fileName) throws FileNotFoundException, IOException, WrongFormatException {
-    	List<StateMachine> machines = new ArrayList<StateMachine>();
-    	try(FileInputStream fis = new FileInputStream(fileName)) {
-    		ExcelUtils excelUtils = new ExcelUtils();
-    		List<List<List<String>>> data = excelUtils.readFromExcel(fis);
-    		for (List<List<String>> sheet : data) {
-    			machines.add(this.convert(sheet));
-    		}
-    	}
-    	return machines;
+    public SMVariable saveSMVariable(SMVariable var, StateMachine stateMachine)
+            throws SQLException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        String sql = "INSERT INTO sm_variables (state_machine_id, sm_variable_name) VALUES (?, ?)";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql,
+                Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setLong(1, stateMachine.getId());
+            pstmt.setString(2, var.getName());
+            pstmt.executeUpdate();
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                keys.next();
+                Long key = keys.getLong(1);
+                var.setId(key);
+            }
+        } catch (SQLException e) {
+            log.error("Error during save SMVariable: " + var.getName()
+                    + ", state machine: " + stateMachine.getName(), e);
+            throw e;
+        }
+        return var;
     }
-    
-    public StateMachine convert(List<List<String>> sheet) throws WrongFormatException {
-    	if (sheet.size() < 3) {
-    		throw new WrongFormatException("Not enough rows");
-    	}
-    	StateMachine stateMachine = new StateMachine();
-    	Map<Integer, SMVariable> variables = this.getVariables(sheet, stateMachine);
-		stateMachine.getVariables().addAll(variables.values());
-    	Map<Integer, SMAction> actions = this.getActions(sheet, stateMachine);
-    	stateMachine.getActions().addAll(actions.values());
-    	Map<Integer, SMRule> rules = this.getRules(sheet, stateMachine);
-    	stateMachine.getRules().addAll(rules.values());
-    	for (int i=1; i<sheet.size(); i++) {
-    		List<String> row = sheet.get(i);
-    		for (int j = 1; j< row.size(); j++) {
-    			String val = row.get(j).trim().toLowerCase();
-    			if (val.length() > 0) {
-    				Boolean value = null;
-    				if (val.matches("(y|yes|да)")) {
-    					value = Boolean.TRUE;
-    				}
-    				if (val.matches("(no|n|нет)")) {
-    					value = Boolean.FALSE;
-    				}
-    				if (value != null) {
-    					if (rules.containsKey(j)) {
-    						if (variables.containsKey(i)) {
-    							SMCondition condition = new SMCondition();
-    							condition.setSmRule(rules.get(j));
-    							condition.setSmVariable(variables.get(i));
-    							condition.setValue(value);
-    							rules.get(j).getConditions().add(condition);
-    						} else if (actions.containsKey(i)) {
-    							rules.get(j).getActions().add(actions.get(i));
-    						}
-    					}
-    				}
-    			}
-    		}
-    	}
-    	return stateMachine;
+
+    public void deleteSMVariableByStateMachineId(Long stateMachineId)
+            throws SQLException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        String sql = "DELETE FROM sm_variables WHERE state_machine_id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, stateMachineId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error(
+                    "Error during deleting sm_variable for state machine id: "
+                            + stateMachineId, e);
+            throw e;
+        }
     }
-    
-    public Map<Integer, SMVariable> getVariables(List<List<String>> sheet, StateMachine sm)  {
-    	Map<Integer, SMVariable> variables = new HashMap<Integer, SMVariable>();
-    	for (int i=1; i<sheet.size(); i++) {
-    		List<String> row = sheet.get(i);
-    		if (row.size() > 0) {
-    			String val = row.get(0).trim();
-    			if (val.length() > 0) {
-    				if (val.matches("(действия|actions)")) {
-    					break;
-    				}
-    				SMVariable var = new SMVariable();
-    				var.setName(val);
-    				var.setStateMachine(sm);
-    				variables.put(i, var);
-    			}
-    			
-    		}
-    	}
-    	return variables;
+
+    public SMCondition saveSMCondition(SMCondition condition, SMRule rule,
+            SMVariable var) throws SQLException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        String sql = "INSERT INTO sm_conditions " + "( sm_rule_id,"
+                + "  sm_variable_id," + "  sm_variable_value) VALUES (?, ?, ?)";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql,
+                Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setLong(1, rule.getId());
+            pstmt.setLong(2, var.getId());
+            pstmt.setBoolean(3, condition.getValue());
+            pstmt.executeUpdate();
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                keys.next();
+                Long key = keys.getLong(1);
+                condition.setId(key);
+            }
+        } catch (SQLException e) {
+            log.error("Error during save SMCondition: " + condition.toString(),
+                    e);
+            throw e;
+        }
+        return condition;
     }
-    
-    public Map<Integer, SMRule> getRules(List<List<String>> sheet, StateMachine sm)  {
-    	Map<Integer, SMRule> rules= new HashMap<Integer, SMRule>();
-    	List<String> firstRow = sheet.get(0);
-    	for (int i=1; i<firstRow.size(); i++) {
-			String val = firstRow.get(i).trim();
-			if (val.length() > 0) {
-				SMRule rule = new SMRule();
-				rule.setName(val);
-				rule.setStateMachine(sm);
-				rules.put(i, rule);
-			}
-    	}
-    	return rules;
+
+    public void deleteSMConditionByRuleId(Long ruleId) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        String sql = "DELETE FROM sm_conditions WHERE " + " sm_rule_id = ? ";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, ruleId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error during deleting sm conditions for rule id: "
+                    + ruleId, e);
+            throw e;
+        }
     }
-    public Map<Integer, SMAction> getActions(List<List<String>> sheet, StateMachine stateMachine) throws WrongFormatException {
-    	Map<Integer, SMAction>  actions = new HashMap<Integer, SMAction>();
-    	if (sheet.size() < 3) {
-    		throw new WrongFormatException("Not enough rows");
-    	}
-    	boolean actionsStarted = false;
-    	for (int i=1; i<sheet.size(); i++) {
-    		List<String> row = sheet.get(i);
-    		if (row.size() > 0) {
-    			String val = row.get(0).trim();
-    			if (val.length() > 0) {
-    				if (val.matches("(действия|actions)")) {
-    					actionsStarted = true;
-    					continue;
-    				}
-    				if (actionsStarted) {
-    					SMAction action = new SMAction();
-    					action.setName(val);
-    					action.setStateMachine(stateMachine);
-    					actions.put(i, action);
-    				}
-    			}
-    			
-    		}
-    	}
-    	return actions;
+
+    public SMRule saveSMRule(SMRule smRule,
+            Map<String, SMVariable> variablesMap,
+            Map<String, SMAction> actionsMap, StateMachine stateMachine)
+            throws SQLException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        String sql = "INSERT INTO sm_rules " + "( state_machine_id,"
+                + "  sm_rule_name ) VALUES (?, ?)";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql,
+                Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setLong(1, stateMachine.getId());
+            pstmt.setString(2, smRule.getName());
+            pstmt.executeUpdate();
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                keys.next();
+                Long key = keys.getLong(1);
+                smRule.setId(key);
+            }
+        } catch (SQLException e) {
+            log.error("Error during save SMRule: " + smRule.toString(), e);
+            throw e;
+        }
+        for (SMCondition condition : smRule.getConditions()) {
+            this.saveSMCondition(condition, smRule,
+                    variablesMap.get(condition.getVariableName()));
+        }
+        for (String actionName : smRule.getActionNames()) {
+            this.attachSMActionToSMRule(actionsMap.get(actionName), smRule);
+        }
+        return smRule;
+    }
+
+    public void deleteSMRulesByStateMachineId(Long stateMachineId)
+            throws SQLException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        String sql = "DELETE FROM sm_rules WHERE state_machine_id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, stateMachineId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error during deleting sm_rule for state machine id: "
+                    + stateMachineId, e);
+            throw e;
+        }
+    }
+
+    public SMAction saveSMAction(SMAction smAction) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        String sql = "INSERT INTO sm_actions " + "( state_machine_id,"
+                + "  sm_action_name , action_text ) VALUES (?, ?, ?)";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql,
+                Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setLong(1, smAction.getStateMachine().getId());
+            pstmt.setString(2, smAction.getName());
+            pstmt.setString(3, smAction.getActionScript());
+            pstmt.executeUpdate();
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                keys.next();
+                Long key = keys.getLong(1);
+                smAction.setId(key);
+            }
+        } catch (SQLException e) {
+            log.error("Error during save SMAction: " + smAction.toString(), e);
+            throw e;
+        }
+        return smAction;
+    }
+
+    public void deleteSMActionsByStateMachineId(Long stateMachineId)
+            throws SQLException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        String sql = "DELETE FROM sm_actions WHERE state_machine_id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, stateMachineId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error during deleting sm_action for state machine id: "
+                    + stateMachineId, e);
+            throw e;
+        }
+    }
+
+    public void attachSMActionToSMRule(SMAction smAction, SMRule smRule)
+            throws SQLException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        String sql = "INSERT INTO sm_actions_rules "
+                + "( sm_rule_id, sm_action_id ) VALUES (?, ?)";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, smRule.getId());
+            pstmt.setLong(2, smAction.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error during save SMAction: " + smAction.toString(), e);
+            throw e;
+        }
+    }
+
+    public void detachSMActionFromSMRule(SMAction smAction, SMRule smRule)
+            throws SQLException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        String sql = "DELETE FROM sm_actions_rules WHERE sm_rule_id = ? and sm_action_id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, smRule.getId());
+            pstmt.setLong(2, smAction.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error during deleting sm_action_rule for rule : "
+                    + smRule.toString() + " action " + smAction.toString(), e);
+            throw e;
+        }
+    }
+
+    public void detachAllSMActionsFromSMRule(SMRule smRule)
+            throws SQLException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        String sql = "DELETE FROM sm_actions_rules WHERE sm_rule_id = ? ";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, smRule.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error during deleting sm_action_rule for rule : "
+                    + smRule.toString(), e);
+            throw e;
+        }
+    }
+
+    public StateMachine saveStateMachine(StateMachine sm) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        String sql = "INSERT INTO state_machines (state_machine_name) VALUES (?)";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql,
+                Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, sm.getName());
+            pstmt.executeUpdate();
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                keys.next();
+                Long key = keys.getLong(1);
+                sm.setId(key);
+            }
+        } catch (SQLException e) {
+            log.error("Error during save state machine: " + sm.getName(), e);
+            throw e;
+        }
+        Map<String, SMVariable> variablesMap = new HashMap<String, SMVariable>();
+        for (SMVariable variable : sm.getVariables()) {
+            this.saveSMVariable(variable, sm);
+            variablesMap.put(variable.getName(), variable);
+        }
+        Map<String, SMAction> actionsMap = new HashMap<String, SMAction>();
+        for (SMAction action : sm.getActions()) {
+            this.saveSMAction(action);
+            actionsMap.put(action.getName(), action);
+        }
+        for (SMRule rule : sm.getRules()) {
+            this.saveSMRule(rule, variablesMap, actionsMap, sm);
+        }
+        return sm;
+    }
+
+    public void deleteStateMachine(StateMachine sm) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        log.info("deleting state machine: " + sm.getName());
+        if (!this.stateMachineExistis(sm.getName())) {
+            log.info("state machine doesn't exist : " + sm.getName());
+            return;
+        }
+        for (SMRule rule : sm.getRules()) {
+            this.deleteSMConditionByRuleId(rule.getId());
+            this.detachAllSMActionsFromSMRule(rule);
+        }
+        this.deleteSMRulesByStateMachineId(sm.getId());
+        this.deleteSMActionsByStateMachineId(sm.getId());
+        this.deleteSMVariableByStateMachineId(sm.getId());
+
+        String sql = "DELETE FROM state_machines WHERE id = ? ";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, sm.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error during deleting state machine : " + sm.toString(),
+                    e);
+            throw e;
+        }
+    }
+
+    public void deleteStateMachine(String stateMachine) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        StateMachine sm = this.getStateMachine(stateMachine);
+        if (sm == null) {
+            return;
+        }
+        this.deleteStateMachine(sm);
+    }
+
+    public SMMemory saveSMMemory(SMMemory memory) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        Long stateMachineId = this.getStateMachineId(memory.getStateMachineName());
+        String sql = "INSERT INTO sm_memory ("
+                + " session_id, "
+                + " state_machine_id, " 
+                + " sm_variable_name, "
+                + " sm_variable_value, " 
+                + " short_string_value, "
+                + " long_string_value, "
+                + " sm_last_modified) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql,
+                Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, memory.getSessionId());
+            pstmt.setLong(2, stateMachineId);
+            pstmt.setString(3, memory.getSmVariableName());
+            pstmt.setBoolean(4, memory.getValue());
+            if (memory.getShortStringValue() == null) {
+                pstmt.setNull(5, Types.VARCHAR);
+            } else {
+                pstmt.setString(5, memory.getShortStringValue());
+            }
+            if (memory.getLongStringValue() == null) {
+                pstmt.setNull(6, Types.VARCHAR);
+            } else {
+                pstmt.setString(6, memory.getLongStringValue());
+            }
+            pstmt.setDate(7, new Date(System.currentTimeMillis()));
+            pstmt.executeUpdate();
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                keys.next();
+                Long key = keys.getLong(1);
+                memory.setId(key);
+            }
+        } catch (SQLException e) {
+            log.error("Error during save SMMemory: " + memory + " sql:" + sql, e);
+            throw e;
+        }
+        return memory;
+    }
+
+    public SMMemory getMemory(String sessionId, String variableName,
+            String stateMachineName) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        String sql = "SELECT " 
+                + "   m.id id," 
+                + "   m.session_id session_id,"
+                + "   m.state_machine_id state_machine_id,"
+                + "   sm.state_machine_name state_machine_name,"
+                + "   m.sm_variable_name sm_variable_name,"
+                + "   m.sm_variable_value sm_variable_value,"
+                + "   m.short_string_value short_string_value,"
+                + "   m.long_string_value long_string_value,"
+                + "   m.sm_last_modified sm_last_modified" 
+                + " FROM "
+                + "   sm_memory m," 
+                + "   state_machine sm" 
+                + " WHERE"
+                + "   m.sessionId = ? AND" 
+                + "   m.sm_variable_name = ? AND"
+                + "   m.state_machine_id = sm.id AND"
+                + "   sm.state_machine_name = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        SMMemory memory = null;
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, sessionId);
+            pstmt.setString(2, variableName);
+            pstmt.setString(3, stateMachineName);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    memory = new SMMemory();
+                    memory.setId(rs.getLong("id"));
+                    memory.setSessionId(rs.getString("session_id"));
+                    memory.setStateMachineName(rs
+                            .getString("state_machine_name"));
+                    memory.setSmVariableName(variableName);
+                    memory.setValue(rs.getBoolean("sm_variable_value"));
+                    memory.setShortStringValue(rs
+                            .getString("short_string_value"));
+                    memory.setLongStringValue(rs.getString("long_string_value"));
+                    memory.setLastModified(rs.getDate("sm_last_modified"));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during save SMMemory: " + memory, e);
+            throw e;
+        }
+        return memory;
+    }
+
+    public void updateSMMemory(SMMemory memory) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        String sql = "UPDATE sm_memory " + " SET sm_variable_value = ?,"
+                + " short_string_value = ?," + " long_string_value = ?, "
+                + " sm_last_modified = ? WHERE id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            if (memory.getValue() != null) {
+                pstmt.setBoolean(1, memory.getValue());
+            } else {
+                pstmt.setNull(1, java.sql.Types.BOOLEAN);
+            }
+            if (memory.getShortStringValue() != null) {
+                pstmt.setString(2, memory.getShortStringValue());
+            } else {
+                pstmt.setNull(2, java.sql.Types.VARCHAR);
+            }
+            if (memory.getLongStringValue() != null) {
+                pstmt.setString(3, memory.getLongStringValue());
+            } else {
+                pstmt.setNull(3, java.sql.Types.CLOB);
+            }
+            pstmt.setDate(4, new Date(System.currentTimeMillis()));
+            pstmt.setLong(5, memory.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error during updating sm_memory: " + memory, e);
+            throw e;
+        }
+    }
+
+    public List<String> listStateMachines() throws InstantiationException,
+            IllegalAccessException, ClassNotFoundException, SQLException {
+        String sql = "SELECT state_machine_name FROM state_machines";
+        List<String> stateMachines = new ArrayList<String>();
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    stateMachines.add(rs.getString("state_machine_name"));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+        return stateMachines;
+    }
+
+    public StateMachine getStateMachine(String name)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException, SQLException {
+        String sql = "SELECT " + " id," + " state_machine_name"
+                + " FROM state_machines " + " WHERE state_machine_name = ?";
+        StateMachine sm = null;
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    sm = new StateMachine();
+                    sm.setId(rs.getLong("id"));
+                    sm.setName(rs.getString("state_machine_name"));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+        if (sm == null) {
+            log.info("state machine not found: " + name);
+            return null;
+        } else {
+            log.info("state machine found: " + name + " id: " + sm.getId());
+        }
+        Map<Long, SMVariable> variables = new HashMap<Long, SMVariable>();
+        this.getSMVariables(sm, variables);
+        Map<Long, SMAction> actions = new HashMap<Long, SMAction>();
+        this.getSMActions(sm, actions);
+        this.getSMRules(sm, variables, actions);
+        return sm;
+    }
+
+    public boolean stateMachineExistis(String name)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException, SQLException {
+        log.info("checking if state machine " + name + " exists");
+        String sql = "SELECT " + " id," + " state_machine_name"
+                + " FROM state_machines " + " WHERE state_machine_name = ?";
+        StateMachine sm = null;
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    sm = new StateMachine();
+                    sm.setId(rs.getLong("id"));
+                    sm.setName(rs.getString("state_machine_name"));
+                    log.info("found state machine " + name + " id:"
+                            + sm.getId());
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+        return (sm != null);
+    }
+
+    public void getSMVariables(StateMachine sm, Map<Long, SMVariable> variables)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException, SQLException {
+        String sql = "SELECT " + " id," + " sm_variable_name "
+                + " FROM sm_variables" + " WHERE state_machine_id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, sm.getId());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SMVariable var = new SMVariable();
+                    var.setId(rs.getLong("id"));
+                    var.setName(rs.getString("sm_variable_name"));
+                    var.setStateMachineName(sm.getName());
+                    sm.getVariables().add(var);
+                    variables.put(var.getId(), var);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+    }
+
+    public List<SMVariable> findSMVariables(String variableName)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException, SQLException {
+        String sql = "SELECT " + " id," + " sm_variable_name,"
+                + " state_machine_id " + " FROM sm_variables"
+                + " WHERE sm_variable_name = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        List<SMVariable> variables = new ArrayList<SMVariable>();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, variableName);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SMVariable var = new SMVariable();
+                    var.setId(rs.getLong("id"));
+                    var.setName(rs.getString("sm_variable_name"));
+                    StateMachine sm = new StateMachine();
+                    sm.setId(rs.getLong("state_machine_id"));
+                    var.setStateMachineName(sm.getName());
+                    sm.getVariables().add(var);
+                    variables.add(var);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+        return variables;
+    }
+
+    public void getSMActions(StateMachine sm, Map<Long, SMAction> actions)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException, SQLException {
+        String sql = "SELECT " + " id," + " sm_action_name, " + " action_text "
+                + " FROM sm_actions " + " WHERE state_machine_id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, sm.getId());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SMAction action = new SMAction();
+                    action.setId(rs.getLong("id"));
+                    action.setName(rs.getString("sm_action_name"));
+                    action.setActionScript(rs.getString("action_text"));
+                    action.setStateMachine(sm);
+                    sm.getActions().add(action);
+                    actions.put(action.getId(), action);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+    }
+
+    public void getSMRules(StateMachine sm, Map<Long, SMVariable> variables,
+            Map<Long, SMAction> actions) throws InstantiationException,
+            IllegalAccessException, ClassNotFoundException, SQLException {
+        String sql = "SELECT " + " id," + " sm_rule_name " + " FROM sm_rules "
+                + " WHERE state_machine_id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, sm.getId());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SMRule rule = new SMRule();
+                    rule.setId(rs.getLong("id"));
+                    rule.setName(rs.getString("sm_rule_name"));
+                    rule.setStateMachineName(sm.getName());
+                    sm.getRules().add(rule);
+                    this.getSMConditions(rule);
+                    this.getSMActionsForRule(rule, actions);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+
+    }
+
+    public void getSMConditions(SMRule rule) throws InstantiationException,
+            IllegalAccessException, ClassNotFoundException, SQLException {
+        String sql = "SELECT  " 
+            + "   c.id id, "
+            + "   r.sm_rule_name sm_rule_name, "
+            + "   v.sm_variable_name sm_variable_name,"
+            + "   c.sm_variable_value sm_variable_value" 
+            + " FROM "
+            + "   sm_conditions c, "
+            + "   sm_rules r,"
+            + "   sm_variables v" 
+            + " WHERE"
+            + "   c.sm_rule_id = r.id AND"
+            + "   c.sm_variable_id = v.id AND" 
+            + "   r.id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, rule.getId());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SMCondition condition = new SMCondition();
+                    condition.setId(rs.getLong("id"));
+                    condition.setValue(rs.getBoolean("sm_variable_value"));
+                    condition.setRuleName(rule.getName());
+                    condition.setVariableName(rs.getString("sm_variable_name"));
+                    condition.setStateMachineName(rule.getStateMachineName());
+                    rule.getConditions().add(condition);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+
+    }
+
+    public void getSMActionsForRule(SMRule rule, Map<Long, SMAction> actions)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException, SQLException {
+        String sql = "SELECT " + " sm_action_id " + " FROM sm_actions_rules "
+                + " WHERE sm_rule_id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, rule.getId());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    rule.getActions().add(
+                            actions.get(rs.getLong("sm_action_id"))
+                                    .getActionScript());
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+
+    }
+
+    public List<SMRule> fireRules(String sessionId)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException, SQLException {
+        String sql = "SELECT " + "   A.rule_id," + "   A.rule_name,"
+                + "   A.session_id" + " FROM " + " (SELECT"
+                + "   count(m.id) cond_count," + "   r.sm_rule_name rule_name,"
+                + "   r.id rule_id," + "   m.session_id session_id,"
+                + "   m.state_machine_id state_machine_id" + "  FROM"
+                + "   sm_memory m," + "   sm_rules r," + "   sm_conditions c,"
+                + "   sm_variables v" + "  WHERE"
+                + "   m.state_machine_id = r.state_machine_id AND"
+                + "   c.sm_rule_id = r.id AND"
+                + "   v.id  = c.sm_variable_id AND"
+                + "   v.sm_variable_name = m.sm_variable_name AND"
+                + "   c.sm_variable_value = m.sm_variable_value"
+                + "  GROUP BY c.sm_rule_id, m.session_id, m.state_machine_id"
+                + "  ) A," + " (SELECT" + "   count(c.id) var_count,"
+                + "   c.sm_rule_id rule_id," + "   r.sm_rule_name rule_name,"
+                + "   r.state_machine_id state_machine_id" + "  FROM "
+                + "   sm_conditions c, " + "   sm_rules r" + "  WHERE"
+                + "   c.sm_rule_id = r.id"
+                + "  GROUP BY c.sm_rule_id, r.state_machine_id) B" + " WHERE "
+                + "  A.cond_count = B.var_count AND"
+                + "  A.rule_id = B.rule_id AND"
+                + "  A.state_machine_id = B.state_machine_id AND"
+                + "  A.session_id = ?";
+        List<SMRule> rules = new ArrayList<SMRule>();
+        Connection conn = super.getDbHelper().getConnection();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, sessionId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SMRule rule = new SMRule();
+                    rule.setId(rs.getLong("rule_id"));
+                    rule.setName(rs.getString("rule_name"));
+                    rule.getActions().addAll(
+                            this.getSMActionsScriptsByRule(rule.getId()));
+                    rules.add(rule);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+        return rules;
+    }
+
+    public List<SMAction> getSMActionsByRule(Long ruleId)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException, SQLException {
+        String sql = "SELECT " + "  a.id id,"
+                + "  a.state_machine_id state_machine_id,"
+                + "  a.sm_action_name sm_action_name,"
+                + "  a.action_text action_text" + " FROM " + "  sm_actions a,"
+                + "  sm_actions_rules ar" + " WHERE "
+                + "  a.id = ar.sm_action_id AND" + "  ar.sm_rule_id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        List<SMAction> actions = new ArrayList<SMAction>();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, ruleId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SMAction action = new SMAction();
+                    action.setId(rs.getLong("id"));
+                    action.setName(rs.getString("sm_action_name"));
+                    action.setActionScript(rs.getString("action_text"));
+                    StateMachine sm = new StateMachine();
+                    sm.setId(rs.getLong("state_machine_id"));
+                    action.setStateMachine(sm);
+                    actions.add(action);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+        return actions;
+    }
+
+    public List<String> getSMActionsScriptsByRule(Long ruleId)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException, SQLException {
+        String sql = "SELECT " + "  a.action_text action_text" + " FROM "
+                + "  sm_actions a," + "  sm_actions_rules ar" + " WHERE "
+                + "  a.id = ar.sm_action_id AND" + "  ar.sm_rule_id = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        List<String> actions = new ArrayList<String>();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, ruleId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    actions.add(rs.getString("action_text"));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during selecting state machines ", e);
+            throw e;
+        }
+        return actions;
+    }
+
+    public void execute(Collection<String> actions, String sessionId,
+            ActionResult result) throws InstantiationException,
+            IllegalAccessException, ClassNotFoundException, SQLException {
+        for (String action : actions) {
+            String[] commands = action.split(";");
+            for (String command : commands) {
+                this.executeAction(command, sessionId, result);
+            }
+        }
+    }
+
+    public void executeActions(Collection<Action> actions, String sessionId,
+            ActionResult result) throws InstantiationException,
+            IllegalAccessException, ClassNotFoundException, SQLException {
+        for (Action action : actions) {
+            String[] commands = action.getActionBody().split(";");
+            for (String command : commands) {
+                this.executeAction(command, sessionId, result);
+            }
+        }
+    }
+
+    public boolean executeSMRules(Collection<SMRule> rules, String sessionId,
+            ActionResult result) throws InstantiationException,
+            IllegalAccessException, ClassNotFoundException, SQLException {
+        boolean changed = false;
+        for (SMRule rule : rules) {
+            for (String action : rule.getActions()) {
+                String[] commands = action.split(";");
+                for (String command : commands) {
+                    if (this.executeAction(command, sessionId, result)) {
+                        changed = true;
+                    }
+                }
+            }
+        }
+        return changed;
+    }
+
+    public boolean executeAction(String action, String sessionId,
+            ActionResult result) throws InstantiationException,
+            IllegalAccessException, ClassNotFoundException, SQLException {
+        boolean changed = false;
+        result.append(action);
+        if (action.indexOf('=') > 0) {
+            String[] parts = action.split("=");
+            if (parts.length < 2) {
+                return false;
+            }
+            String variable = parts[0].trim();
+            String stringValue = parts[1].trim().toLowerCase();
+            result.getMemory().put(variable, stringValue);
+            if (variable.toLowerCase().matches("(ответ|output|response|выход)")) {
+                if (stringValue.indexOf('|') > 0) {
+                    String[] responses = stringValue.split("|");
+                    int idx = new Random().nextInt(responses.length);
+                    String randomResponse = (responses[idx]);
+                    result.setResponse(randomResponse);
+                } else {
+                    result.setResponse(stringValue);
+                }
+            }
+            if (variable.toLowerCase().matches(
+                    "(материал|content|страница|page)")) {
+                result.setContent(stringValue);
+            }
+            if (variable.toLowerCase().matches("(запрос|вопрос|request)")) {
+                result.setRequest(stringValue);
+            }
+            Boolean val = null;
+            if (stringValue.matches("(true|y|yes|да|1)")) {
+                val = Boolean.TRUE;
+            }
+            if (stringValue.matches("(false|n|no|нет|0)")) {
+                val = Boolean.FALSE;
+            }
+            List<SMVariable> variables = this.findSMVariables(variable);
+            for (SMVariable var : variables) {
+                if (this.safeOrUpdateMemory(sessionId, var, val, stringValue)) {
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+    }
+
+    public boolean safeOrUpdateMemory(String sessionId, SMVariable variable,
+            Boolean value, String stringValue) throws InstantiationException,
+            IllegalAccessException, ClassNotFoundException, SQLException {
+        boolean changed = false;
+        SMMemory memory = this.getMemory(sessionId, variable.getName(),
+                variable.getStateMachineName());
+        if (memory == null) {
+            memory = new SMMemory();
+            memory.setSessionId(sessionId);
+            memory.setSmVariableName(variable.getName());
+            memory.setStateMachineName(variable.getStateMachineName());
+            memory.setValue(value);
+            if (stringValue.length() > 250) {
+                memory.setLongStringValue(stringValue);
+            } else {
+                memory.setShortStringValue(stringValue);
+            }
+            this.saveSMMemory(memory);
+            changed = true;
+        } else {
+            if (memory.getValue() != value) {
+                memory.setValue(value);
+                if (stringValue.length() > 250) {
+                    memory.setLongStringValue(stringValue);
+                } else {
+                    memory.setShortStringValue(stringValue);
+                }
+                this.updateSMMemory(memory);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    public boolean safeOrUpdateMemory(String sessionId, SMVariable variable,
+            String stringValue) throws InstantiationException,
+            IllegalAccessException, ClassNotFoundException, SQLException {
+        boolean changed = false;
+        SMMemory memory = this.getMemory(sessionId, variable.getName(),
+                variable.getStateMachineName());
+        if (memory == null) {
+            memory = new SMMemory();
+            memory.setSessionId(sessionId);
+            memory.setSmVariableName(variable.getName());
+            memory.setStateMachineName(variable.getStateMachineName());
+            memory.setShortStringValue(stringValue);
+            this.saveSMMemory(memory);
+            changed = true;
+        } else {
+            if (!memory.getShortStringValue().equals(stringValue)) {
+                memory.setShortStringValue(stringValue);
+                this.updateSMMemory(memory);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    public List<SMMemory> listMemory(String sessionId) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        String sql = "SELECT " + "   m.id id," + "   m.session_id session_id,"
+                + "   m.state_machine_id state_machine_id,"
+                + "   sm.state_machine_name state_machine_name,"
+                + "   m.sm_variable_name sm_variable_name,"
+                + "   m.sm_variable_value sm_variable_value,"
+                + "   m.short_string_value short_string_value,"
+                + "   m.long_string_value long_string_value,"
+                + "   m.sm_last_modified sm_last_modified" + " FROM "
+                + "   sm_memory m," + "   state_machines sm" + " WHERE"
+                + "   m.state_machine_id = sm.id AND" + "   m.sessionId = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        List<SMMemory> sessionMemory = new ArrayList<SMMemory>();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, sessionId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SMMemory memory = new SMMemory();
+                    memory.setId(rs.getLong("id"));
+                    memory.setSessionId(rs.getString("session_id"));
+                    memory.setStateMachineName(rs
+                            .getString("state_machine_name"));
+                    memory.setSmVariableName(rs.getString("sm_variable_name"));
+                    memory.setValue(rs.getBoolean("sm_variable_value"));
+                    memory.setShortStringValue(rs
+                            .getString("short_string_value"));
+                    memory.setLongStringValue(rs.getString("long_string_value"));
+                    memory.setLastModified(rs.getDate("sm_last_modified"));
+                    sessionMemory.add(memory);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during list session memory: " + sessionId, e);
+            throw e;
+        }
+        return sessionMemory;
+    }
+
+    public Long getStateMachineId(String stateMachineName) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        String sql = "SELECT id FROM state_machines WHERE  state_machine_name = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        Long stateMachineId = null;
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, stateMachineName);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    stateMachineId = rs.getLong("id");
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during get state machine id by name: "
+                    + stateMachineName, e);
+            throw e;
+        }
+        return stateMachineId;
+    }
+
+    public Long getSMVariableId(String stateMachineName, String variableName) throws SQLException,
+            InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        String sql = "SELECT "
+                + "     v.id "
+                + "  FROM "
+                + "     state_machines sm,"
+                + "     sm_variables v"
+                + "  WHERE"
+                + "     sm.id = v.state_machine_id AND"
+                + "     sm.state_machine_name = ? AND"
+                + "     v.sm_variable_name = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        Long id = null;
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, stateMachineName);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    id = rs.getLong("id");
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during get state machine variable id by state machine name: "
+                    + stateMachineName + " and variable name: " + variableName, e);
+            throw e;
+        }
+        return id;
     }
 }

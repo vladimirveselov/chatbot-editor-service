@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Rule;
 import org.vvv.chatbotdb.model.Topic;
 
 public class TopicDBHelper extends DBObject {
@@ -33,6 +34,9 @@ public class TopicDBHelper extends DBObject {
 					+ ", rank: " + topic.getRank(), e);
 			throw e;
 		} 
+		for (Rule rule : topic.getRules()) {
+		    super.getHolder().getRuleDBHelper().save(rule, topic);
+		}
 		return topic;
 	}
 
@@ -61,6 +65,15 @@ public class TopicDBHelper extends DBObject {
 	}
 
 	public void delete(String topicName) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+	    Topic topic = this.getByName(topicName);
+	    if (topic == null) {
+	        log.warn("Topic " + topicName + " doesn't exist");
+	        return;
+	    }
+	    List<Rule> rules = super.getHolder().getRuleDBHelper().getByTopic(topic);
+	    for (Rule rule : rules) {
+	        super.getHolder().getRuleDBHelper().delete(rule);
+	    }
 		String sql = "DELETE FROM topics WHERE topic_name = ?";
 		PreparedStatement pstmt = null;
 		try {
