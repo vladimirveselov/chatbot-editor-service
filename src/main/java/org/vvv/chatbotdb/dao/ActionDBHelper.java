@@ -18,13 +18,13 @@ public class ActionDBHelper extends DBObject {
 
 	private static Log log = LogFactory.getLog(ActionDBHelper.class);
 
-	public Action save(Action action) throws SQLException, InstantiationException,
+	public Action save(Action action, Rule rule) throws SQLException, InstantiationException,
 			IllegalAccessException, ClassNotFoundException {
 		String sql = "INSERT INTO actions (rule_id, action_body, priority) VALUES (?, ?, ?)";
 		Connection conn = super.getDbHelper().getConnection();
 		try (PreparedStatement pstmt = conn.prepareStatement(sql,
 				Statement.RETURN_GENERATED_KEYS)) {
-			pstmt.setLong(1, action.getRule().getId());
+			pstmt.setLong(1, rule.getId());
 			pstmt.setString(2, action.getActionBody());
 			pstmt.setLong(3, action.getPriority());
 			pstmt.executeUpdate();
@@ -35,8 +35,8 @@ public class ActionDBHelper extends DBObject {
 			}
 		} catch (SQLException e) {
 			log.error("Error during save action: " + action.getActionBody()
-					+ ", rule: " + action.getRule().getId() + "|"
-					+ action.getRule().getName(), e);
+					+ ", rule: " + rule.getId() + "|"
+					+ rule.getName(), e);
 			throw e;
 		}
 		return action;
@@ -91,7 +91,18 @@ public class ActionDBHelper extends DBObject {
 
 	public Action getById(Long id) throws SQLException, InstantiationException,
 			IllegalAccessException, ClassNotFoundException {
-		String sql = "SELECT id, rule_id, action_body, priority FROM actions WHERE id = ?";
+		String sql = "SELECT "
+		        + " a.id id,"
+		        + " a.rule_id rule_id"
+		        + " r.rule_name rule_name,"
+		        + " t.topic_name topic_name,"
+		        + " a.action_body, "
+		        + " a.priority "
+		        + " FROM actions a, rules r, topics t"
+		        + " WHERE "
+		        + " a.rule_id = r.id AND"
+		        + " r.topic_id = t.id AND"
+		        + " id = ?";
 		Connection conn = super.getDbHelper().getConnection();
 		Action action = null;
 		try(PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -102,9 +113,8 @@ public class ActionDBHelper extends DBObject {
 					action.setId(rs.getLong("id"));
 					action.setActionBody(rs.getString("action_body"));
 					action.setPriority(rs.getLong("priority"));
-					Rule rule = new Rule();
-					rule.setId(rs.getLong("rule_id"));
-					action.setRule(rule);
+					action.setRuleName(rs.getString("rule_name"));
+					action.setTopicName(rs.getString("topic_name"));
 				}
 			}
 		} catch (SQLException e) {
@@ -127,8 +137,10 @@ public class ActionDBHelper extends DBObject {
 					action.setId(rs.getLong("id"));
 					action.setActionBody(rs.getString("action_body"));
 					action.setPriority(rs.getLong("priority"));
-					action.setRule(rule);
+					action.setRuleName(rule.getName());
+					action.setTopicName(rule.getTopicName());
 					rule.getActions().add(action);
+					log.info("Loaded action:" + action);
 				}
 			}
 		} catch (SQLException e) {
@@ -164,23 +176,14 @@ public class ActionDBHelper extends DBObject {
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, ruleName);
 			pstmt.setString(2, topicName);
-			Rule rule = null;
 			try (ResultSet rs = pstmt.executeQuery()) {
 				while (rs.next()) {
 					Action action = new Action();
 					action.setId(rs.getLong("id"));
 					action.setActionBody(rs.getString("action_body"));
 					action.setPriority(rs.getLong("priority"));
-					if (rule == null) {
-						rule = new Rule();
-						rule.setId(rs.getLong("rule_id"));
-						rule.setName(rs.getString("rule_name"));
-						Topic topic = new Topic();
-						topic.setId(rs.getLong("topic_id"));
-						topic.setTopicName(rs.getString("topic_name"));
-						rule.setTopicName(topic.getTopicName());
-					}
-					action.setRule(rule);
+					action.setRuleName(ruleName);
+					action.setTopicName(topicName);
 					actions.add(action);
 				}
 			}

@@ -104,7 +104,7 @@ public class Rule {
     	for (String outputText : outputs) {
     		Output output = new Output();
     		output.setText(outputText);
-    		output.setRule(this);
+    		output.setRuleName(this.getName());
     		this.outputs.add(output);
     	}
     	return this;
@@ -112,7 +112,7 @@ public class Rule {
 
     public Rule withOutputs(Output ...outputs) {
     	for (Output output : outputs) {
-    		output.setRule(this);
+    		output.setRuleName(this.getName());
     		this.outputs.add(output);
     	}
     	return this;
@@ -140,9 +140,12 @@ public class Rule {
     }
 
     @Override
-	public String toString() {
-		return "Rule [id=" + id + ", topic=" + topicName + ", name=" + name
-				+ ", response=" + response + ", rank=" + rank + "]";
-	}
+    public String toString() {
+        return "Rule [id=" + id + ", topicName=" + topicName + ", name=" + name
+                + ", response=" + response + ", rank=" + rank + ", inputs="
+                + inputs + ", outputs=" + outputs + ", actions=" + actions
+                + "]";
+    }
 
+   
 }

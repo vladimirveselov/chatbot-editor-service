@@ -88,7 +88,7 @@ public class StateMachineReader {
         for (int i = 1; i < sheet.size(); i++) {
             List<String> row = sheet.get(i);
             if (row.size() > 0) {
-                String val = row.get(0).trim();
+                String val = row.get(0).toLowerCase().trim();
                 if (val.length() > 0) {
                     if (val.matches("(действия|actions)")) {
                         break;
@@ -132,7 +132,7 @@ public class StateMachineReader {
         for (int i = 1; i < sheet.size(); i++) {
             List<String> row = sheet.get(i);
             if (row.size() > 0) {
-                String val = row.get(0).trim();
+                String val = row.get(0).toLowerCase().trim();
                 if (val.length() > 0) {
                     if (val.matches("(действия|actions)")) {
                         actionsStarted = true;
@@ -143,7 +143,7 @@ public class StateMachineReader {
                         action.setName(actionName + actionNumber);
                         actionNumber++;
                         action.setActionScript(val);
-                        action.setStateMachine(stateMachine);
+                        action.setStateMachineName(stateMachine.getName());
                         actions.put(i, action);
                     }
                 }

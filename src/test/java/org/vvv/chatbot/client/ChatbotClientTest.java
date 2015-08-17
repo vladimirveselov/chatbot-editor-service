@@ -176,7 +176,8 @@ public class ChatbotClientTest {
 		Output output = new Output();
 		output.setText("What?");
 		output.setRequest("WHAT");
-		output.setRule(rule2);
+		output.setRuleName(rule2.getName());
+		output.setTopicName(rule.getTopicName());
 		output = client.createOutput(topic.getTopicName(), rule.getName(), output);
 		log.info("output created:" + output.getId());
 		
@@ -193,7 +194,8 @@ public class ChatbotClientTest {
 		assertTrue(exists);
 		
 		Action action = new Action();
-		action.setRule(rule2);
+		action.setRuleName(rule2.getName());
+		action.setTopicName(rule2.getTopicName());
 		action.setPriority(10l);
 		action.setActionBody("test");
 		

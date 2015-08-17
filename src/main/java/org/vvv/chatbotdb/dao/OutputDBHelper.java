@@ -17,14 +17,14 @@ public class OutputDBHelper extends DBObject {
 
 	private static Log log = LogFactory.getLog(OutputDBHelper.class);
 
-	public Output save(Output output) throws SQLException,
+	public Output save(Output output, Rule rule) throws SQLException,
 			InstantiationException, IllegalAccessException,
 			ClassNotFoundException {
 		String sql = "INSERT INTO outputs (rule_id, output_text, request) VALUES (?, ?, ?)";
 		Connection conn = super.getDbHelper().getConnection();
 		try (PreparedStatement pstmt = conn.prepareStatement(sql,
 				Statement.RETURN_GENERATED_KEYS)) {
-			pstmt.setLong(1, output.getRule().getId());
+			pstmt.setLong(1, rule.getId());
 			pstmt.setString(2, output.getText());
 			pstmt.setString(3, output.getRequest());
 			pstmt.executeUpdate();
@@ -35,8 +35,8 @@ public class OutputDBHelper extends DBObject {
 			}
 		} catch (SQLException e) {
 			log.error("Error during save output: " + output.getText()
-					+ ", rule: " + output.getRule().getId() + "|"
-					+ output.getRule().getName(), e);
+					+ ", rule: " + rule.getId() + "|"
+					+ rule.getName(), e);
 			throw e;
 		}
 		return output;
@@ -94,7 +94,21 @@ public class OutputDBHelper extends DBObject {
 
 	public Output getById(Long id) throws SQLException, InstantiationException,
 			IllegalAccessException, ClassNotFoundException {
-		String sql = "SELECT id, output_text, request, rule_id FROM outputs WHERE id = ?";
+		String sql = "SELECT "
+		        + "  o.id id, "
+		        + "  o.output_text output_text,"
+		        + "  o.request request, "
+		        + "  o.rule_id rule_id,"
+		        + "  r.rule_name rule_name,"
+		        + "  t.topic_name "
+		        + " FROM "
+		        + "  outputs o,"
+		        + "  rules r,"
+		        + "  topics t"
+		        + " WHERE "
+		        + "  r.topic_id = t.id AND"
+		        + "  o.rule_id = r.id AND"
+		        + "  o.id = ?";
 		Output output = null;
 		Connection conn = super.getDbHelper().getConnection();
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -105,9 +119,8 @@ public class OutputDBHelper extends DBObject {
 					output.setId(rs.getLong("id"));
 					output.setText(rs.getString("output_text"));
 					output.setRequest(rs.getString("request"));
-					Rule rule = new Rule();
-					rule.setId(rs.getLong("rule_id"));
-					output.setRule(rule);
+                    output.setRuleName(rs.getString("rule_name"));
+                    output.setTopicName(rs.getString("topic_name"));
 				}
 			}
 		} catch (SQLException e) {
@@ -117,31 +130,27 @@ public class OutputDBHelper extends DBObject {
 		return output;
 	}
 
-	public List<Output> findByRuleId(Long ruleId) throws SQLException,
+	public List<Output> findByRule(Rule rule) throws SQLException,
 			InstantiationException, IllegalAccessException,
 			ClassNotFoundException {
 		String sql = "SELECT id, output_text, request, rule_id FROM outputs WHERE rule_id = ?";
 		List<Output> outputs = new ArrayList<Output>();
 		Connection conn = super.getDbHelper().getConnection();
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setLong(1, ruleId);
+			pstmt.setLong(1, rule.getId());
 			try (ResultSet rs = pstmt.executeQuery()) {
-				Rule rule = null;
 				if (rs.next()) {
 					Output output = new Output();
 					output.setId(rs.getLong("id"));
 					output.setText(rs.getString("output_text"));
 					output.setRequest(rs.getString("request"));
-					if (rule == null) {
-						rule = new Rule();
-						rule.setId(rs.getLong("rule_id"));
-					}
-					output.setRule(rule);
+					output.setRuleName(rule.getName());
+					output.setTopicName(rule.getTopicName());
 					outputs.add(output);
 				}
 			}
 		} catch (SQLException e) {
-			log.error("Error during selecting the output: rule_id " + ruleId, e);
+			log.error("Error during selecting the output: rule_name " + rule.getName(), e);
 			throw e;
 		}
 		return outputs;
@@ -171,18 +180,13 @@ public class OutputDBHelper extends DBObject {
 			pstmt.setString(1, topicName);
 			pstmt.setString(2, ruleName);
 			try (ResultSet rs = pstmt.executeQuery()) {
-				Rule rule = null;
 				if (rs.next()) {
 					Output output = new Output();
 					output.setId(rs.getLong("id"));
 					output.setText(rs.getString("output_text"));
 					output.setRequest(rs.getString("request"));
-					if (rule == null) {
-						rule = new Rule();
-						rule.setId(rs.getLong("rule_id"));
-						rule.setName(rs.getString("rule_name"));
-					}
-					output.setRule(rule);
+					output.setRuleName(ruleName);
+					output.setTopicName(topicName);
 					outputs.add(output);
 				}
 			}

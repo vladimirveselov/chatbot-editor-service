@@ -33,6 +33,13 @@ public class ActionResult {
         this.response = response;
     }
 
+    @Override
+    public String toString() {
+        return "ActionResult [response=" + response + ", content=" + content
+                + ", memory=" + memory + ", sessionId=" + sessionId
+                + ", request=" + request + ", script=" + script + "]";
+    }
+
     public String getContent() {
         return content;
     }
@@ -63,7 +70,7 @@ public class ActionResult {
     
     public void append(String script) {
         this.script.append(script);
-        this.script.append(";\r\n");
+        this.script.append(";");
     }
 
 }

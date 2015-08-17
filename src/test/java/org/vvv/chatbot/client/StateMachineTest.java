@@ -54,9 +54,21 @@ public class StateMachineTest {
 	    
 	    Query query = new Query();
 	    query.setText("Привет");
-	    query = client.getAnswerGET(query);
+	    query = client.getAnswerPOST(query);
 	    log.info("answer:" + query);
 	    
+	    query.setText("Привет");
+        query = client.getAnswerPOST(query);
+        log.info("answer:" + query);
+        
+        query.setText("Пока");
+        query = client.getAnswerPOST(query);
+        log.info("answer:" + query);
+
+        query.setText("Пока");
+        query = client.getAnswerPOST(query);
+        log.info("answer:" + query);
+
 //	    client.deleteTopic(topic.getTopicName());
 //	    client.deleteStateMachine(sm.getName());
 	}

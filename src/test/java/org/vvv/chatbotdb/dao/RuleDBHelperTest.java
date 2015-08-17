@@ -97,7 +97,8 @@ public class RuleDBHelperTest {
         Set<Output> outputs = new HashSet<Output>();
         for (int i = 0; i < 5; i++) {
             Output output = new Output();
-            output.setRule(rule);
+            output.setRuleName(rule.getName());
+            output.setTopicName(rule.getTopicName());
             output.setText("ответ " + i);
             outputs.add(output);
         }

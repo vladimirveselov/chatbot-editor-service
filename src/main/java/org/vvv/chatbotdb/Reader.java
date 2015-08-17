@@ -59,7 +59,8 @@ public class Reader {
                     if (line.trim().length() == 0) {
                         responseStarted = false;
                         Output output = new Output();
-                        output.setRule(currentRule);
+                        output.setRuleName(currentRule.getName());
+                        output.setTopicName(currentTopic.getTopicName());
                         output.setText(sb.toString());
                         currentRule.getOutputs().add(output);
                         sb = new StringBuffer();
@@ -105,7 +106,8 @@ public class Reader {
             }
             if (responseStarted) {
                 Output output = new Output();
-                output.setRule(currentRule);
+                output.setRuleName(currentRule.getName());
+                output.setTopicName(currentTopic.getTopicName());
                 output.setText(sb.toString());
                 currentRule.getOutputs().add(output);
                 console.createRule(currentRule, currentTopic);

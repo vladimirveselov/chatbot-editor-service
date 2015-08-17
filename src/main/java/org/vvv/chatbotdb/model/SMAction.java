@@ -1,15 +1,10 @@
 package org.vvv.chatbotdb.model;
 
 public class SMAction {
-	
-	@Override
-	public String toString() {
-		return "SMAction [name=" + name + "]";
-	}
 
 	private Long id;
 	
-	private StateMachine stateMachine;
+	private String stateMachineName;
 	
 	private String name;
 	
@@ -21,14 +16,6 @@ public class SMAction {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public StateMachine getStateMachine() {
-		return stateMachine;
-	}
-
-	public void setStateMachine(StateMachine stateMachine) {
-		this.stateMachine = stateMachine;
 	}
 
 	public String getName() {
@@ -46,5 +33,13 @@ public class SMAction {
 	public void setActionScript(String actionScript) {
 		this.actionScript = actionScript;
 	}
+
+    public String getStateMachineName() {
+        return stateMachineName;
+    }
+
+    public void setStateMachineName(String stateMachineName) {
+        this.stateMachineName = stateMachineName;
+    }
 
 }

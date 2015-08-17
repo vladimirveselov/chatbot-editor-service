@@ -9,16 +9,18 @@ public class Action {
     
     private Long priority = 0l;
     
-    public Long getPriority() {
-        return priority;
-    }
-
-    public void setPriority(Long priority) {
-        this.priority = priority;
-    }
-
-    private Rule rule;
+    private String ruleName;
     
+    private String topicName;
+    
+    public String getTopicName() {
+        return topicName;
+    }
+
+    public void setTopicName(String topicName) {
+        this.topicName = topicName;
+    }
+
     private String actionBody;
 
     public Long getId() {
@@ -29,14 +31,6 @@ public class Action {
         this.id = id;
     }
 
-    public Rule getRule() {
-        return rule;
-    }
-
-    public void setRule(Rule rule) {
-        this.rule = rule;
-    }
-
     public String getActionBody() {
         return actionBody;
     }
@@ -45,9 +39,29 @@ public class Action {
         this.actionBody = actionBody;
     }
 
+    public String getRuleName() {
+        return ruleName;
+    }
+
+    public void setRuleName(String ruleName) {
+        this.ruleName = ruleName;
+    }
+
+    public Long getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Long priority) {
+        this.priority = priority;
+    }
+
     @Override
     public String toString() {
-        return "Action [id=" + id + ", priority=" + priority + ", actionBody="
+        return "Action [id=" + id + ", priority=" + priority + ", ruleName="
+                + ruleName + ", topicName=" + topicName + ", actionBody="
                 + actionBody + "]";
     }
+
+
+   
 }

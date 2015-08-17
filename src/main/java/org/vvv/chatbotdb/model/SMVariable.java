@@ -24,11 +24,6 @@ public class SMVariable {
 		this.id = id;
 	}
 
-	@Override
-	public String toString() {
-		return "SMVariable [name=" + name + "]";
-	}
-
 	public String getName() {
 		return name;
 	}

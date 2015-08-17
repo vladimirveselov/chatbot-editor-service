@@ -67,5 +67,11 @@ public class SMRule {
         this.stateMachineName = stateMachineName;
     }
 
-	
+    @Override
+    public String toString() {
+        return "SMRule [id=" + id + ", name=" + name + ", stateMachineName="
+                + stateMachineName + ", conditions=" + conditions
+                + ", actions=" + actions + ", actionNames=" + actionNames + "]";
+    }
+
 }

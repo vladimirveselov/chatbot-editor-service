@@ -1,14 +1,8 @@
 package org.vvv.chatbotdb.model;
 
 public class SMCondition {
-	
-	@Override
-	public String toString() {
-		return "SMCondition [smVariable=" + variableName
-				+ ", value=" + value + "]";
-	}
 
-	private Long id;
+    private Long id;
 	
 	private String stateMachineName;
 	
@@ -56,6 +50,12 @@ public class SMCondition {
 
     public void setVariableName(String variableName) {
         this.variableName = variableName;
+    }
+
+    @Override
+    public String toString() {
+        return "SMCondition [id=" + id + ", variableName=" + variableName
+                + ", value=" + value + "]";
     }
 
 }

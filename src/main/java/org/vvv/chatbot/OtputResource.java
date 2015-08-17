@@ -59,8 +59,9 @@ public class OtputResource {
 		if (rule == null) {
 			throw new RuleDoesntExistException("Rule " + ruleName + " topic " + topicName + " doesnt exist");
 		}
-		output.setRule(rule);
-		return this.holder.getOutputDBHelper().save(output);
+		output.setRuleName(rule.getName());
+		output.setTopicName(rule.getTopicName());
+		return this.holder.getOutputDBHelper().save(output, rule);
 	}
 
 	@DELETE

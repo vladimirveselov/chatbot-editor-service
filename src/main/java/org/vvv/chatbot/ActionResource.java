@@ -59,8 +59,9 @@ public class ActionResource {
 		if (rule == null) {
 			throw new RuleDoesntExistException("Rule " + ruleName + " topic " + topicName + " doesnt exist");
 		}
-		action.setRule(rule);
-		return this.holder.getActionDBHelper().save(action);
+		action.setRuleName(rule.getName());
+		action.setTopicName(rule.getTopicName());
+		return this.holder.getActionDBHelper().save(action, rule);
 	}
 
 	@DELETE

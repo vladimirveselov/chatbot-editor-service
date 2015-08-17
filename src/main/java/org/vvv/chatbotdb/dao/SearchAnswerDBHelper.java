@@ -34,6 +34,8 @@ public class SearchAnswerDBHelper extends DBObject {
     public Query process(Query query) throws InstantiationException,
             IllegalAccessException, ClassNotFoundException, SQLException {
         log.info("processing query - " + query);
+        query.setResponse(null);
+        query.setActions(null);
         QueryDBHelper qh = super.getHolder().getQueryDBHelper();
         query.setStartDate(new Date());
         if (query.getSession_id() == null) {
@@ -44,9 +46,10 @@ public class SearchAnswerDBHelper extends DBObject {
             if (queries.size() > 0) {
                 Query prev = queries.get(0);
                 if (prev.getActions() != null) {
-                    String[] actions = prev.getActions().split(";");
+                    log.info("executing previous - " + prev.getActions());
+                    String[] actions = prev.getActions().trim().split(";");
                     for (String action : actions) {
-                        log.info("executing action - " + queries.size());
+                        log.info("executing action - " + action);
                         if (action.startsWith(REQUEST_PREFIX)
                                 && (query.getStartDate().getTime() < prev
                                         .getStartDate().getTime()
@@ -70,23 +73,27 @@ public class SearchAnswerDBHelper extends DBObject {
             ClassNotFoundException {
         SearchAnswerResult result = null;
         if (query.getRequest() != null) {
+            log.info("search response");
             result = this.searchResponse(query);
         }
         if (result == null) {
+            log.info("search all");
             result = this.searchAll(query);
         }
         if (result == null) {
+            log.info("search default");
             result = this.searchDefault(query);
         }
         if (result != null) {
             Rule rule = super.getHolder().getRuleDBHelper()
                     .getById(result.getRuleId());
-            log.debug("Rule:" + rule.getName());
-            log.debug("Answer:");
+            log.info("Rule:" + rule.getName());
+            query.setRule_id(rule.getId());
+            log.info("Answer:");
             List<Output> outputs = super.getHolder().getOutputDBHelper()
-                    .findByRuleId(rule.getId());
+                    .findByRule(rule);
             for (Output o : outputs) {
-                log.debug(o.getText());
+                log.info(o.getText());
             }
             if (outputs.size() > 0) {
                 Output output = outputs.get(random.nextInt(outputs.size()));
@@ -101,20 +108,31 @@ public class SearchAnswerDBHelper extends DBObject {
             // execute actions
             ActionResult actionResult = new ActionResult();
             super.getHolder().getActionDBHelper().getByRule(rule);
+            log.info("actions 1:" + rule.getActions());
             super.getHolder().getStateMachineDBHelper()
                     .executeActions(rule.getActions(), query.getSession_id(), actionResult);
+            log.info("executed actions 1:" + actionResult);
+            log.info("query 1:" + query.getActions());
             List<SMRule> smRules = super.getHolder().getStateMachineDBHelper()
                     .fireRules(query.getSession_id());
+            log.info("found rules:" + smRules);
             super.getHolder().getStateMachineDBHelper()
                         .executeSMRules(smRules, query.getSession_id(), actionResult);
+            log.info("executed actions 2:" + actionResult);
+            log.info("query 2:" + query.getActions());
             if (actionResult.getResponse() !=null) {
-                query.setResponse(query.getResponse() + " " + actionResult.getResponse());
+                if (query.getResponse() != null) {
+                    query.setResponse(query.getResponse() + " " + actionResult.getResponse());
+                } else {
+                    query.setResponse(actionResult.getResponse());
+                }
                 if (actionResult.getRequest() != null) {
                     query.setActions(REQUEST_PREFIX + actionResult.getRequest() + ";");
                 }
                 super.getHolder().getQueryDBHelper().update(query);
             }
             String script = actionResult.getScript();
+            log.info("script:" + script);
             if (script.length() > 0) {
                 if (query.getActions() != null) {
                     query.setActions(query.getActions() + script);
@@ -123,6 +141,8 @@ public class SearchAnswerDBHelper extends DBObject {
                 }
                 super.getHolder().getQueryDBHelper().update(query);
             }
+        } else {
+            log.warn("no results found for:" + query);
         }
         return query;
     }

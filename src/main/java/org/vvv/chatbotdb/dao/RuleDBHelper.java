@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.vvv.chatbotdb.model.Action;
 import org.vvv.chatbotdb.model.Input;
 import org.vvv.chatbotdb.model.Output;
 import org.vvv.chatbotdb.model.Rule;
@@ -21,6 +22,7 @@ public class RuleDBHelper extends DBObject {
     private static Log log = LogFactory.getLog(RuleDBHelper.class);
     
     public Rule save(Rule rule, Topic topic) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+        log.info("saving rule:" + rule);
         String sql = "INSERT INTO rules (topic_id, rule_name, rank, response) VALUES (?, ?, ?, ?)";
         Connection conn = super.getDbHelper().getConnection();
         try(PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -35,10 +37,16 @@ public class RuleDBHelper extends DBObject {
 	            rule.setId(key);
             }            
             for (Input input : rule.getInputs()) {
+                log.info("saving input:" + input);
                 super.getHolder().getInputDBHelper().save(input, rule);                
             }
             for (Output output : rule.getOutputs()) {
-                super.getHolder().getOutputDBHelper().save(output);                
+                log.info("saving output:" + output);
+                super.getHolder().getOutputDBHelper().save(output, rule);                
+            }
+            for (Action action: rule.getActions()) {
+                log.info("saving action:" + action);                
+                super.getHolder().getActionDBHelper().save(action, rule);                
             }
         } catch (SQLException e) {
             log.error("Error during save rule: name: " + rule.getName() + ", rank: " + rule.getRank(), e);

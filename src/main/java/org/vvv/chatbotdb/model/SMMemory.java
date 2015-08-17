@@ -68,14 +68,6 @@ public class SMMemory {
 		this.lastModified = lastModified;
 	}
 
-    @Override
-    public String toString() {
-        return "SMMemory [id=" + id + ", sessionId=" + sessionId + ", value="
-                + value + ", lastModified=" + lastModified
-                + ", shortStringValue=" + shortStringValue
-                + ", longStringValue=" + longStringValue + "]";
-    }
-
     public String getStateMachineName() {
         return stateMachineName;
     }
@@ -90,6 +82,16 @@ public class SMMemory {
 
     public void setSmVariableName(String smVariableName) {
         this.smVariableName = smVariableName;
+    }
+
+    @Override
+    public String toString() {
+        return "SMMemory [id=" + id + ", sessionId=" + sessionId
+                + ", stateMachineName=" + stateMachineName
+                + ", smVariableName=" + smVariableName + ", value=" + value
+                + ", lastModified=" + lastModified + ", shortStringValue="
+                + shortStringValue + ", longStringValue=" + longStringValue
+                + "]";
     }
     
     

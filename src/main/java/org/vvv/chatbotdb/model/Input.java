@@ -45,5 +45,11 @@ public class Input {
         this.topicName = topicName;
     }
 
+    @Override
+    public String toString() {
+        return "Input [id=" + id + ", text=" + text + ", topicName="
+                + topicName + ", ruleName=" + ruleName + "]";
+    }
+
     
 }

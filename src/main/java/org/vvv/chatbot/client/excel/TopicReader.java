@@ -7,6 +7,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.vvv.chatbotdb.dao.WrongFormatException;
+import org.vvv.chatbotdb.model.Action;
 import org.vvv.chatbotdb.model.Input;
 import org.vvv.chatbotdb.model.Output;
 import org.vvv.chatbotdb.model.Rule;
@@ -134,6 +135,7 @@ public class TopicReader {
         }
         this.getInputs(rule, data, startRow, currentRow, headersMap);
         this.getOutputs(rule, data, startRow, currentRow, headersMap);
+        this.getActions(rule, data, startRow, currentRow, headersMap);
         return rule;
     }
    
@@ -183,7 +185,8 @@ public class TopicReader {
                 String val = data.get(i).get(headersMap.get(TopicHeader.OUTPUTS)).trim();
                 if (val.length() > 0) {
                     Output output = new Output();
-                    output.setRule(rule);
+                    output.setRuleName(rule.getName());
+                    output.setTopicName(rule.getTopicName());
                     output.setText(val);
                     rule.getOutputs().add(output);
                     if (requests) {
@@ -207,13 +210,16 @@ public class TopicReader {
             return;
         }
         for (int i=startRow; i<currentRow; i++) {
-            String val = data.get(i).get(headersMap.get(TopicHeader.INPUTS)).trim();
-            if (val.length() > 0) {
-                Input input = new Input();
-                input.setRuleName(rule.getName());
-                input.setTopicName(rule.getTopicName());
-                input.setText(val);
-                rule.getInputs().add(input);
+            if (data.get(i).size() > headersMap.get(TopicHeader.ACTIONS)) {
+                String val = data.get(i).get(headersMap.get(TopicHeader.ACTIONS)).trim();
+                if (val.length() > 0) {
+                    Action action = new Action();
+                    action.setRuleName(rule.getName());
+                    action.setActionBody(val);
+                    action.setPriority(100l);
+                    action.setTopicName(rule.getTopicName());
+                    rule.getActions().add(action);
+                }
             }
         }
     }

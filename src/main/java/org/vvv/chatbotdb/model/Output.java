@@ -11,14 +11,16 @@ public class Output {
     
     private String request;
     
-    private Rule rule;
+    private String ruleName;
+    
+    private String topicName;
 
-    public Rule getRule() {
-        return rule;
+    public String getTopicName() {
+        return topicName;
     }
 
-    public void setRule(Rule rule) {
-        this.rule = rule;
+    public void setTopicName(String topicName) {
+        this.topicName = topicName;
     }
 
     public String getRequest() {
@@ -55,4 +57,19 @@ public class Output {
     	return this;
     }
 
+    public String getRuleName() {
+        return ruleName;
+    }
+
+    public void setRuleName(String ruleName) {
+        this.ruleName = ruleName;
+    }
+
+    @Override
+    public String toString() {
+        return "Output [id=" + id + ", text=" + text + ", request=" + request
+                + ", ruleName=" + ruleName + "]";
+    }
+
+    
 }

@@ -1,7 +1,6 @@
 package org.vvv.chatbotdb.dao;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -155,7 +154,7 @@ public class StateMachineDBHelper extends DBObject {
         }
     }
 
-    public SMAction saveSMAction(SMAction smAction) throws SQLException,
+    public SMAction saveSMAction(SMAction smAction, StateMachine stateMachine) throws SQLException,
             InstantiationException, IllegalAccessException,
             ClassNotFoundException {
         String sql = "INSERT INTO sm_actions " + "( state_machine_id,"
@@ -163,7 +162,7 @@ public class StateMachineDBHelper extends DBObject {
         Connection conn = super.getDbHelper().getConnection();
         try (PreparedStatement pstmt = conn.prepareStatement(sql,
                 Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setLong(1, smAction.getStateMachine().getId());
+            pstmt.setLong(1, stateMachine.getId());
             pstmt.setString(2, smAction.getName());
             pstmt.setString(3, smAction.getActionScript());
             pstmt.executeUpdate();
@@ -266,7 +265,7 @@ public class StateMachineDBHelper extends DBObject {
         }
         Map<String, SMAction> actionsMap = new HashMap<String, SMAction>();
         for (SMAction action : sm.getActions()) {
-            this.saveSMAction(action);
+            this.saveSMAction(action, sm);
             actionsMap.put(action.getName(), action);
         }
         for (SMRule rule : sm.getRules()) {
@@ -316,33 +315,35 @@ public class StateMachineDBHelper extends DBObject {
     public SMMemory saveSMMemory(SMMemory memory) throws SQLException,
             InstantiationException, IllegalAccessException,
             ClassNotFoundException {
-        Long stateMachineId = this.getStateMachineId(memory.getStateMachineName());
+        log.info("Save memory:" + memory);
         String sql = "INSERT INTO sm_memory ("
                 + " session_id, "
-                + " state_machine_id, " 
                 + " sm_variable_name, "
                 + " sm_variable_value, " 
                 + " short_string_value, "
                 + " long_string_value, "
-                + " sm_last_modified) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + " sm_last_modified) VALUES (?, ?, ?, ?, ?, ?)";
         Connection conn = super.getDbHelper().getConnection();
         try (PreparedStatement pstmt = conn.prepareStatement(sql,
                 Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, memory.getSessionId());
-            pstmt.setLong(2, stateMachineId);
-            pstmt.setString(3, memory.getSmVariableName());
-            pstmt.setBoolean(4, memory.getValue());
-            if (memory.getShortStringValue() == null) {
-                pstmt.setNull(5, Types.VARCHAR);
+            pstmt.setString(2, memory.getSmVariableName());
+            if (memory.getValue() == null) {
+                pstmt.setNull(3, Types.BOOLEAN);
             } else {
-                pstmt.setString(5, memory.getShortStringValue());
+                pstmt.setBoolean(3, memory.getValue());
+            }
+            if (memory.getShortStringValue() == null) {
+                pstmt.setNull(4, Types.VARCHAR);
+            } else {
+                pstmt.setString(4, memory.getShortStringValue());
             }
             if (memory.getLongStringValue() == null) {
-                pstmt.setNull(6, Types.VARCHAR);
+                pstmt.setNull(5, Types.VARCHAR);
             } else {
-                pstmt.setString(6, memory.getLongStringValue());
+                pstmt.setString(5, memory.getLongStringValue());
             }
-            pstmt.setDate(7, new Date(System.currentTimeMillis()));
+            pstmt.setDate(6,  new java.sql.Date(System.currentTimeMillis()));
             pstmt.executeUpdate();
             try (ResultSet keys = pstmt.getGeneratedKeys()) {
                 keys.next();
@@ -356,41 +357,33 @@ public class StateMachineDBHelper extends DBObject {
         return memory;
     }
 
-    public SMMemory getMemory(String sessionId, String variableName,
-            String stateMachineName) throws SQLException,
+    public SMMemory getMemory(String sessionId, String variableName) throws SQLException,
             InstantiationException, IllegalAccessException,
             ClassNotFoundException {
         String sql = "SELECT " 
                 + "   m.id id," 
                 + "   m.session_id session_id,"
                 + "   m.state_machine_id state_machine_id,"
-                + "   sm.state_machine_name state_machine_name,"
                 + "   m.sm_variable_name sm_variable_name,"
                 + "   m.sm_variable_value sm_variable_value,"
                 + "   m.short_string_value short_string_value,"
                 + "   m.long_string_value long_string_value,"
                 + "   m.sm_last_modified sm_last_modified" 
                 + " FROM "
-                + "   sm_memory m," 
-                + "   state_machine sm" 
+                + "   sm_memory m" 
                 + " WHERE"
-                + "   m.sessionId = ? AND" 
-                + "   m.sm_variable_name = ? AND"
-                + "   m.state_machine_id = sm.id AND"
-                + "   sm.state_machine_name = ?";
+                + "   m.session_id = ? AND" 
+                + "   m.sm_variable_name = ? ";
         Connection conn = super.getDbHelper().getConnection();
         SMMemory memory = null;
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, sessionId);
             pstmt.setString(2, variableName);
-            pstmt.setString(3, stateMachineName);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     memory = new SMMemory();
                     memory.setId(rs.getLong("id"));
                     memory.setSessionId(rs.getString("session_id"));
-                    memory.setStateMachineName(rs
-                            .getString("state_machine_name"));
                     memory.setSmVariableName(variableName);
                     memory.setValue(rs.getBoolean("sm_variable_value"));
                     memory.setShortStringValue(rs
@@ -409,6 +402,7 @@ public class StateMachineDBHelper extends DBObject {
     public void updateSMMemory(SMMemory memory) throws SQLException,
             InstantiationException, IllegalAccessException,
             ClassNotFoundException {
+        log.info("Update memory:" + memory);
         String sql = "UPDATE sm_memory " + " SET sm_variable_value = ?,"
                 + " short_string_value = ?," + " long_string_value = ?, "
                 + " sm_last_modified = ? WHERE id = ?";
@@ -429,7 +423,7 @@ public class StateMachineDBHelper extends DBObject {
             } else {
                 pstmt.setNull(3, java.sql.Types.CLOB);
             }
-            pstmt.setDate(4, new Date(System.currentTimeMillis()));
+            pstmt.setDate(4, new java.sql.Date(System.currentTimeMillis()));
             pstmt.setLong(5, memory.getId());
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -543,9 +537,18 @@ public class StateMachineDBHelper extends DBObject {
     public List<SMVariable> findSMVariables(String variableName)
             throws InstantiationException, IllegalAccessException,
             ClassNotFoundException, SQLException {
-        String sql = "SELECT " + " id," + " sm_variable_name,"
-                + " state_machine_id " + " FROM sm_variables"
-                + " WHERE sm_variable_name = ?";
+        log.info("searching variables by name:" + variableName);
+        String sql = "SELECT " 
+                + "  v.id id," 
+                + "  v.sm_variable_name sm_variable_name,"
+                + "  sm.state_machine_name state_machine_name" 
+                + " FROM "
+                + "  sm_variables v,"
+                + "  state_machines sm"
+                + " WHERE "
+                + "  v.state_machine_id = sm.id AND"
+                + "  v.sm_variable_name = ?";
+        log.info("sql:" + sql);
         Connection conn = super.getDbHelper().getConnection();
         List<SMVariable> variables = new ArrayList<SMVariable>();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -555,20 +558,54 @@ public class StateMachineDBHelper extends DBObject {
                     SMVariable var = new SMVariable();
                     var.setId(rs.getLong("id"));
                     var.setName(rs.getString("sm_variable_name"));
-                    StateMachine sm = new StateMachine();
-                    sm.setId(rs.getLong("state_machine_id"));
-                    var.setStateMachineName(sm.getName());
-                    sm.getVariables().add(var);
+                    var.setStateMachineName(rs.getString("state_machine_name"));
                     variables.add(var);
+                    log.info("found:" + var.getId() + " " + var.getName());
                 }
             }
         } catch (SQLException e) {
-            log.error("Error during selecting state machines ", e);
+            log.error("Error during getting list of vairables by name " + variableName, e);
             throw e;
         }
         return variables;
     }
 
+
+    public List<SMVariable> findSMVariablesByStateMachineName(String stateMachineName)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException, SQLException {
+        String sql = "SELECT " 
+                + "  v.id id," 
+                + "  v.sm_variable_name sm_variable_name,"
+                + "  sm.state_machine_name state_machine_name" 
+                + " FROM "
+                + "  sm_variables v,"
+                + "  state_machines sm"
+                + " WHERE "
+                + "  v.state_machine_id = sm.id AND"
+                + "  sm.state_machine_name = ?";
+        Connection conn = super.getDbHelper().getConnection();
+        List<SMVariable> variables = new ArrayList<SMVariable>();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, stateMachineName);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    SMVariable var = new SMVariable();
+                    var.setId(rs.getLong("id"));
+                    var.setName(rs.getString("sm_variable_name"));
+                    var.setStateMachineName(rs.getString("state_machine_name"));
+                    variables.add(var);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error during getting list of vairables by state machine name " + stateMachineName, e);
+            throw e;
+        }
+        return variables;
+    }
+
+
+    
     public void getSMActions(StateMachine sm, Map<Long, SMAction> actions)
             throws InstantiationException, IllegalAccessException,
             ClassNotFoundException, SQLException {
@@ -583,7 +620,7 @@ public class StateMachineDBHelper extends DBObject {
                     action.setId(rs.getLong("id"));
                     action.setName(rs.getString("sm_action_name"));
                     action.setActionScript(rs.getString("action_text"));
-                    action.setStateMachine(sm);
+                    action.setStateMachineName(sm.getName());
                     sm.getActions().add(action);
                     actions.put(action.getId(), action);
                 }
@@ -681,38 +718,59 @@ public class StateMachineDBHelper extends DBObject {
     public List<SMRule> fireRules(String sessionId)
             throws InstantiationException, IllegalAccessException,
             ClassNotFoundException, SQLException {
-        String sql = "SELECT " + "   A.rule_id," + "   A.rule_name,"
-                + "   A.session_id" + " FROM " + " (SELECT"
-                + "   count(m.id) cond_count," + "   r.sm_rule_name rule_name,"
-                + "   r.id rule_id," + "   m.session_id session_id,"
-                + "   m.state_machine_id state_machine_id" + "  FROM"
-                + "   sm_memory m," + "   sm_rules r," + "   sm_conditions c,"
-                + "   sm_variables v" + "  WHERE"
-                + "   m.state_machine_id = r.state_machine_id AND"
+        this.merge(sessionId);
+        String sql = "SELECT " 
+                + "   A.rule_id," 
+                + "   A.rule_name,"
+                + "   A.session_id,"
+                + "   B.state_machine_name" 
+                + " FROM " 
+                + " (SELECT"
+                + "   count(m.id) cond_count," 
+                + "   r.sm_rule_name rule_name,"
+                + "   r.id rule_id," 
+                + "   m.session_id session_id" 
+                + "  FROM"
+                + "   sm_memory m," 
+                + "   sm_rules r," 
+                + "   sm_conditions c,"
+                + "   sm_variables v"
+                + "  WHERE"
                 + "   c.sm_rule_id = r.id AND"
                 + "   v.id  = c.sm_variable_id AND"
                 + "   v.sm_variable_name = m.sm_variable_name AND"
-                + "   c.sm_variable_value = m.sm_variable_value"
-                + "  GROUP BY c.sm_rule_id, m.session_id, m.state_machine_id"
-                + "  ) A," + " (SELECT" + "   count(c.id) var_count,"
-                + "   c.sm_rule_id rule_id," + "   r.sm_rule_name rule_name,"
-                + "   r.state_machine_id state_machine_id" + "  FROM "
-                + "   sm_conditions c, " + "   sm_rules r" + "  WHERE"
-                + "   c.sm_rule_id = r.id"
-                + "  GROUP BY c.sm_rule_id, r.state_machine_id) B" + " WHERE "
+                + "   c.sm_variable_value = m.sm_variable_value AND"
+                + "   m.session_id = ?"
+                + "  GROUP BY c.sm_rule_id, m.session_id"
+                + "  ) A," 
+                + " (SELECT" 
+                + "   count(c.id) var_count,"
+                + "   c.sm_rule_id rule_id," 
+                + "   r.sm_rule_name rule_name,"
+                + "   sm.state_machine_name state_machine_name"
+                + "  FROM "
+                + "   sm_conditions c, "
+                + "   sm_rules r,"
+                + "   state_machines sm"
+                + "  WHERE"
+                + "   c.sm_rule_id = r.id AND"
+                + "   sm.id = r.state_machine_id"
+                + "  GROUP BY c.sm_rule_id) B"
+                + " WHERE "
                 + "  A.cond_count = B.var_count AND"
-                + "  A.rule_id = B.rule_id AND"
-                + "  A.state_machine_id = B.state_machine_id AND"
-                + "  A.session_id = ?";
+                + "  A.rule_id = B.rule_id";
         List<SMRule> rules = new ArrayList<SMRule>();
         Connection conn = super.getDbHelper().getConnection();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, sessionId);
+            log.info("executing :" + sql);
+            log.info("executing session id:" + sessionId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     SMRule rule = new SMRule();
                     rule.setId(rs.getLong("rule_id"));
                     rule.setName(rs.getString("rule_name"));
+                    rule.setStateMachineName(rs.getString("state_machine_name"));
                     rule.getActions().addAll(
                             this.getSMActionsScriptsByRule(rule.getId()));
                     rules.add(rule);
@@ -728,12 +786,20 @@ public class StateMachineDBHelper extends DBObject {
     public List<SMAction> getSMActionsByRule(Long ruleId)
             throws InstantiationException, IllegalAccessException,
             ClassNotFoundException, SQLException {
-        String sql = "SELECT " + "  a.id id,"
+        String sql = "SELECT " 
+                + "  a.id id,"
                 + "  a.state_machine_id state_machine_id,"
+                + "  sm.state_machine_name state_machine_name,"
                 + "  a.sm_action_name sm_action_name,"
-                + "  a.action_text action_text" + " FROM " + "  sm_actions a,"
-                + "  sm_actions_rules ar" + " WHERE "
-                + "  a.id = ar.sm_action_id AND" + "  ar.sm_rule_id = ?";
+                + "  a.action_text action_text" 
+                + " FROM " 
+                + "  sm_actions a,"
+                + "  sm_actions_rules ar" 
+                + "  state_machines sm"
+                + " WHERE "
+                + "  a.state_machine_id = sm.id AND"
+                + "  a.id = ar.sm_action_id AND" 
+                + "  ar.sm_rule_id = ?";
         Connection conn = super.getDbHelper().getConnection();
         List<SMAction> actions = new ArrayList<SMAction>();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -744,9 +810,7 @@ public class StateMachineDBHelper extends DBObject {
                     action.setId(rs.getLong("id"));
                     action.setName(rs.getString("sm_action_name"));
                     action.setActionScript(rs.getString("action_text"));
-                    StateMachine sm = new StateMachine();
-                    sm.setId(rs.getLong("state_machine_id"));
-                    action.setStateMachine(sm);
+                    action.setStateMachineName(rs.getString("state_machine_name"));
                     actions.add(action);
                 }
             }
@@ -809,6 +873,7 @@ public class StateMachineDBHelper extends DBObject {
             for (String action : rule.getActions()) {
                 String[] commands = action.split(";");
                 for (String command : commands) {
+                    log.info("executing command:" + command);
                     if (this.executeAction(command, sessionId, result)) {
                         changed = true;
                     }
@@ -830,12 +895,18 @@ public class StateMachineDBHelper extends DBObject {
             }
             String variable = parts[0].trim();
             String stringValue = parts[1].trim().toLowerCase();
+            log.info("set " + variable + "=" + stringValue);
             result.getMemory().put(variable, stringValue);
             if (variable.toLowerCase().matches("(ответ|output|response|выход)")) {
+                log.info("Processing output:" + stringValue);
                 if (stringValue.indexOf('|') > 0) {
-                    String[] responses = stringValue.split("|");
+                    String[] responses = stringValue.split("\\|");
+                    for (int i=0; i<responses.length; i++) {
+                        log.info("responses["+i+"]=" + responses[i]);                        
+                    }
                     int idx = new Random().nextInt(responses.length);
-                    String randomResponse = (responses[idx]);
+                    String randomResponse = responses[idx];
+                    log.info("Processing output, response:" + randomResponse);
                     result.setResponse(randomResponse);
                 } else {
                     result.setResponse(stringValue);
@@ -855,27 +926,23 @@ public class StateMachineDBHelper extends DBObject {
             if (stringValue.matches("(false|n|no|нет|0)")) {
                 val = Boolean.FALSE;
             }
-            List<SMVariable> variables = this.findSMVariables(variable);
-            for (SMVariable var : variables) {
-                if (this.safeOrUpdateMemory(sessionId, var, val, stringValue)) {
-                    changed = true;
-                }
+            if (this.safeOrUpdateMemory(sessionId, variable, val, stringValue)) {
+                changed = true;
             }
         }
         return changed;
     }
 
-    public boolean safeOrUpdateMemory(String sessionId, SMVariable variable,
+    public boolean safeOrUpdateMemory(String sessionId, String variable,
             Boolean value, String stringValue) throws InstantiationException,
             IllegalAccessException, ClassNotFoundException, SQLException {
         boolean changed = false;
-        SMMemory memory = this.getMemory(sessionId, variable.getName(),
-                variable.getStateMachineName());
+        log.info("save or update memory:" + sessionId + " " + variable + " " + value + " " + stringValue);
+        SMMemory memory = this.getMemory(sessionId, variable);
         if (memory == null) {
             memory = new SMMemory();
             memory.setSessionId(sessionId);
-            memory.setSmVariableName(variable.getName());
-            memory.setStateMachineName(variable.getStateMachineName());
+            memory.setSmVariableName(variable);
             memory.setValue(value);
             if (stringValue.length() > 250) {
                 memory.setLongStringValue(stringValue);
@@ -903,8 +970,7 @@ public class StateMachineDBHelper extends DBObject {
             String stringValue) throws InstantiationException,
             IllegalAccessException, ClassNotFoundException, SQLException {
         boolean changed = false;
-        SMMemory memory = this.getMemory(sessionId, variable.getName(),
-                variable.getStateMachineName());
+        SMMemory memory = this.getMemory(sessionId, variable.getName());
         if (memory == null) {
             memory = new SMMemory();
             memory.setSessionId(sessionId);
@@ -926,16 +992,18 @@ public class StateMachineDBHelper extends DBObject {
     public List<SMMemory> listMemory(String sessionId) throws SQLException,
             InstantiationException, IllegalAccessException,
             ClassNotFoundException {
-        String sql = "SELECT " + "   m.id id," + "   m.session_id session_id,"
-                + "   m.state_machine_id state_machine_id,"
-                + "   sm.state_machine_name state_machine_name,"
-                + "   m.sm_variable_name sm_variable_name,"
-                + "   m.sm_variable_value sm_variable_value,"
-                + "   m.short_string_value short_string_value,"
-                + "   m.long_string_value long_string_value,"
-                + "   m.sm_last_modified sm_last_modified" + " FROM "
-                + "   sm_memory m," + "   state_machines sm" + " WHERE"
-                + "   m.state_machine_id = sm.id AND" + "   m.sessionId = ?";
+        String sql = "SELECT " 
+                + "   id," 
+                + "   session_id,"
+                + "   sm_variable_name,"
+                + "   sm_variable_value,"
+                + "   short_string_value,"
+                + "   long_string_value,"
+                + "   sm_last_modified" 
+                + " FROM "
+                + "   sm_memory "
+                + " WHERE"
+                + "   session_id = ?";
         Connection conn = super.getDbHelper().getConnection();
         List<SMMemory> sessionMemory = new ArrayList<SMMemory>();
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -945,8 +1013,6 @@ public class StateMachineDBHelper extends DBObject {
                     SMMemory memory = new SMMemory();
                     memory.setId(rs.getLong("id"));
                     memory.setSessionId(rs.getString("session_id"));
-                    memory.setStateMachineName(rs
-                            .getString("state_machine_name"));
                     memory.setSmVariableName(rs.getString("sm_variable_name"));
                     memory.setValue(rs.getBoolean("sm_variable_value"));
                     memory.setShortStringValue(rs
@@ -1011,5 +1077,29 @@ public class StateMachineDBHelper extends DBObject {
             throw e;
         }
         return id;
+    }
+    
+    public void merge(String sessionId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+        List<SMMemory> memory = this.listMemory(sessionId);
+        Map<String, SMMemory> memoryMap = new HashMap<String, SMMemory>();
+        for (SMMemory memoryRecord : memory) {
+            log.info("found memory:" + memoryRecord);
+            memoryMap.put(memoryRecord.getSmVariableName(), memoryRecord);
+        }
+        List<String> stateMachineNames = this.listStateMachines();
+        for (String stateMachineName : stateMachineNames) {
+            List<SMVariable> variables = this.findSMVariablesByStateMachineName(stateMachineName);
+            for (SMVariable var : variables) {
+                if (!memoryMap.containsKey(var.getName())) {
+                    SMMemory mem = new SMMemory();
+                    mem.setSmVariableName(var.getName());
+                    mem.setValue(Boolean.FALSE);
+                    mem.setSessionId(sessionId);
+                    log.info("saving memory: " + mem);
+                    this.saveSMMemory(mem);
+                    memoryMap.put(mem.getSmVariableName(), mem);
+                }
+            }
+        }
     }
 }
