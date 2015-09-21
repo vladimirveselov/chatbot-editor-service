@@ -1,1 +1,0 @@
-ALTER TABLE sm_memory MODIFY state_machine_id INT(19) NULL;

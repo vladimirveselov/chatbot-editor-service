@@ -69,8 +69,8 @@ public class StateMachineTest {
         query = client.getAnswerPOST(query);
         log.info("answer:" + query);
 
-//	    client.deleteTopic(topic.getTopicName());
-//	    client.deleteStateMachine(sm.getName());
+	    client.deleteTopic(topic.getTopicName());
+	    client.deleteStateMachine(sm.getName());
 	}
 	
 }
